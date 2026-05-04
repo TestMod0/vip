@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIP Member Feedback</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #1a1a1a; --ink2: #3d3d3d; --ink3: #777; --ink4: #aaa;
+  --line: #e8e8e8; --line2: #f0f0f0; --bg: #fafaf8; --card: #ffffff;
+  --green: #1a6644; --green-bg: #f0f7f3; --red: #8b2020; --red-bg: #fdf2f2;
+  --amber: #7a4f00; --amber-bg: #fdf8ed; --blue: #1a3d6b; --blue-bg: #f0f4fb; --r: 10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; scroll-behavior: smooth; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
+::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 99px; }
+
+/* INDEX */
+#index-page { max-width: 780px; margin: 0 auto; padding: 48px 24px 80px; }
+.site-header { margin-bottom: 40px; padding-bottom: 24px; border-bottom: 1px solid var(--line); display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.site-title { font-family: 'Instrument Serif', serif; font-size: 28px; font-weight: 400; letter-spacing: -0.3px; }
+.site-title span { color: var(--ink3); }
+.site-sub { font-size: 12px; color: var(--ink4); margin-top: 4px; font-family: 'DM Mono', monospace; }
+.sync-area { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+.sync-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--line); background: var(--card); color: var(--ink2); font-family: 'Inter', sans-serif; transition: all 0.15s; white-space: nowrap; }
+.sync-btn:hover { border-color: var(--ink3); background: var(--line2); }
+.sync-btn.syncing { opacity: 0.6; pointer-events: none; }
+.sync-status { font-size: 10px; color: var(--ink4); font-family: 'DM Mono', monospace; text-align: right; }
+.sync-status.ok { color: var(--green); }
+.sync-status.err { color: var(--red); }
+
+.search-bar { position: relative; margin-bottom: 24px; }
+.search-bar input { width: 100%; padding: 12px 16px 12px 40px; border: 1px solid var(--line); border-radius: var(--r); background: var(--card); font-size: 13px; font-family: 'Inter', sans-serif; color: var(--ink); outline: none; transition: border-color 0.15s; }
+.search-bar input:focus { border-color: var(--ink); }
+.search-bar input::placeholder { color: var(--ink4); }
+.search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--ink4); font-size: 15px; pointer-events: none; }
+
+.filter-row { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
+.chip { padding: 5px 14px; border-radius: 99px; font-size: 11px; font-weight: 500; border: 1px solid var(--line); color: var(--ink3); cursor: pointer; background: var(--card); transition: all 0.12s; font-family: 'Inter', sans-serif; }
+.chip:hover { border-color: var(--ink3); color: var(--ink); }
+.chip.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+.member-grid { display: flex; flex-direction: column; gap: 8px; }
+.member-row { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; transition: all 0.12s; display: flex; align-items: center; gap: 16px; color: inherit; }
+.member-row:hover { border-color: var(--ink3); box-shadow: 0 2px 8px rgba(0,0,0,0.06); transform: translateY(-1px); }
+.member-row.has-feedback { border-left: 3px solid var(--ink); }
+.member-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--line2); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; font-family: 'Instrument Serif', serif; font-size: 15px; color: var(--ink2); flex-shrink: 0; }
+.member-info { flex: 1; min-width: 0; }
+.member-name { font-weight: 500; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.member-meta { font-size: 11px; color: var(--ink4); font-family: 'DM Mono', monospace; margin-top: 2px; }
+.member-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.tier-tag { font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 99px; letter-spacing: 0.5px; font-family: 'DM Mono', monospace; }
+.t-diamond { background: #f3f0ff; color: #6c4ee0; }
+.t-gold { background: #fdf8ed; color: #7a4f00; }
+.t-silver { background: #f0f4fb; color: #1a3d6b; }
+.t-risk { background: #fdf2f2; color: #8b2020; }
+.feedback-count { font-size: 10px; color: var(--ink4); font-family: 'DM Mono', monospace; }
+.has-badge { background: var(--ink); color: #fff; font-size: 9px; font-weight: 600; padding: 2px 6px; border-radius: 99px; font-family: 'DM Mono', monospace; }
+.no-members { text-align: center; padding: 40px; color: var(--ink4); font-size: 13px; }
+.copy-link-btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 500; border: 1px solid var(--line); background: var(--card); color: var(--ink3); cursor: pointer; font-family: 'DM Mono', monospace; transition: all 0.12s; white-space: nowrap; flex-shrink: 0; }
+.copy-link-btn:hover { border-color: var(--ink3); color: var(--ink); background: var(--line2); }
+
+/* PROFILE */
+#profile-page { display: none; max-width: 720px; margin: 0 auto; padding: 32px 24px 80px; }
+.back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink3); text-decoration: none; margin-bottom: 28px; transition: color 0.12s; cursor: pointer; }
+.back-link:hover { color: var(--ink); }
+.profile-hero { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; margin-bottom: 24px; }
+.hero-top { padding: 24px 28px; border-bottom: 1px solid var(--line); display: flex; align-items: flex-start; gap: 18px; }
+.hero-avatar { width: 56px; height: 56px; border-radius: 50%; border: 1px solid var(--line); background: var(--line2); display: flex; align-items: center; justify-content: center; font-family: 'Instrument Serif', serif; font-size: 20px; color: var(--ink2); flex-shrink: 0; }
+.hero-name { font-family: 'Instrument Serif', serif; font-size: 24px; font-weight: 400; line-height: 1.15; margin-bottom: 4px; }
+.hero-sub { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--ink3); margin-bottom: 10px; }
+.hero-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.hero-actions { margin-left: auto; display: flex; gap: 6px; flex-shrink: 0; }
+.btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 14px; border-radius: 7px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--line); background: var(--card); color: var(--ink2); font-family: 'Inter', sans-serif; transition: all 0.12s; white-space: nowrap; }
+.btn:hover { border-color: var(--ink3); }
+.btn.primary { background: var(--ink); border-color: var(--ink); color: #fff; }
+.btn.primary:hover { opacity: 0.85; }
+.btn.ghost { background: transparent; border-color: var(--line); color: var(--ink3); font-size: 11px; padding: 5px 10px; }
+.hero-metrics { display: grid; grid-template-columns: repeat(4,1fr); }
+.metric-cell { padding: 16px 20px; border-right: 1px solid var(--line); }
+.metric-cell:last-child { border-right: none; }
+.metric-label { font-size: 10px; color: var(--ink4); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; font-family: 'DM Mono', monospace; }
+.metric-value { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 500; }
+.mv-green { color: var(--green); } .mv-red { color: var(--red); } .mv-blue { color: var(--blue); }
+
+/* 90d stats panel */
+.stats-90d { border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; margin-bottom: 20px; }
+.stats-90d-head { padding: 10px 16px; background: var(--line2); border-bottom: 1px solid var(--line); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--ink3); font-family: 'DM Mono', monospace; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+.stats-90d-body { display: grid; grid-template-columns: repeat(3,1fr); gap: 0; }
+.stat-cell { padding: 12px 16px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.stat-cell:nth-child(3n) { border-right: none; }
+.stat-cell:nth-last-child(-n+3) { border-bottom: none; }
+.stat-lbl { font-size: 9px; color: var(--ink4); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px; font-family: 'DM Mono', monospace; }
+.stat-val { font-size: 12px; font-weight: 600; font-family: 'DM Mono', monospace; }
+
+/* Sections */
+.section { margin-bottom: 20px; }
+.section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--ink3); font-family: 'DM Mono', monospace; }
+
+/* Log tabs */
+.log-tabs { display: flex; gap: 0; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; margin-bottom: 14px; }
+.log-tab { flex: 1; padding: 9px 14px; font-size: 12px; font-weight: 500; font-family: 'Inter', sans-serif; cursor: pointer; background: var(--card); color: var(--ink3); border: none; border-right: 1px solid var(--line); transition: all 0.12s; text-align: center; }
+.log-tab:last-child { border-right: none; }
+.log-tab:hover { background: var(--line2); color: var(--ink); }
+.log-tab.active { background: var(--ink); color: #fff; }
+.log-tab.active-gift { background: #5b3d99; color: #fff; }
+
+/* Feedback cards */
+.feedback-card { border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; margin-bottom: 10px; }
+.feedback-card-head { padding: 12px 16px; border-bottom: 1px solid var(--line2); display: flex; align-items: center; gap: 10px; background: var(--line2); }
+.contact-type { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 99px; font-family: 'DM Mono', monospace; }
+.ct-call { background: var(--blue-bg); color: var(--blue); }
+.ct-wa { background: var(--green-bg); color: var(--green); }
+.ct-note { background: var(--amber-bg); color: var(--amber); }
+.ct-gifts { background: #f5f0ff; color: #5b3d99; }
+.ct-tg { background: #e8f4fd; color: #0070ba; }
+.feedback-date { font-size: 11px; color: var(--ink4); font-family: 'DM Mono', monospace; margin-left: auto; }
+.feedback-body { padding: 16px; }
+.feedback-text { font-size: 13px; line-height: 1.75; color: var(--ink2); white-space: pre-wrap; }
+.feedback-footer { padding: 10px 16px; border-top: 1px solid var(--line2); display: flex; gap: 16px; background: var(--line2); }
+.feedback-footer span { font-size: 11px; color: var(--ink3); font-family: 'DM Mono', monospace; }
+.feedback-footer strong { color: var(--ink); font-weight: 500; }
+.delete-entry-btn { display: inline-flex; align-items: center; gap: 3px; padding: 3px 8px; border-radius: 5px; font-size: 10px; border: 1px solid transparent; background: transparent; color: var(--ink4); cursor: pointer; font-family: 'DM Mono', monospace; transition: all 0.12s; }
+.delete-entry-btn:hover { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+.edit-gift-btn { display: inline-flex; align-items: center; gap: 3px; padding: 3px 8px; border-radius: 5px; font-size: 10px; border: 1px solid transparent; background: transparent; color: var(--ink4); cursor: pointer; font-family: 'DM Mono', monospace; transition: all 0.12s; }
+.edit-gift-btn:hover { border-color: var(--ink3); color: var(--ink2); background: var(--line2); }
+.gift-edit-inline { display: flex; gap: 6px; align-items: center; margin-top: 4px; }
+.gift-edit-inline input { flex: 1; background: var(--line2); border: 1px solid var(--ink3); border-radius: 5px; padding: 4px 8px; font-size: 12px; font-family: 'DM Mono', monospace; color: var(--ink); outline: none; }
+.gift-edit-inline .save-gift-btn { padding: 4px 10px; border-radius: 5px; font-size: 11px; font-weight: 500; border: 1px solid var(--ink); background: var(--ink); color: #fff; cursor: pointer; font-family: 'Inter', sans-serif; }
+.gift-edit-inline .cancel-gift-btn { padding: 4px 8px; border-radius: 5px; font-size: 11px; border: 1px solid var(--line); background: transparent; color: var(--ink3); cursor: pointer; font-family: 'Inter', sans-serif; }
+
+/* Add note form */
+.add-note-box { border: 1px dashed var(--line); border-radius: var(--r); padding: 16px; background: var(--card); }
+.add-note-box textarea { width: 100%; min-height: 80px; background: var(--line2); border: 1px solid var(--line); border-radius: 7px; padding: 10px 12px; font-size: 13px; font-family: 'Inter', sans-serif; color: var(--ink); resize: vertical; outline: none; line-height: 1.6; transition: border-color 0.15s; }
+.add-note-box textarea:focus { border-color: var(--ink3); }
+.add-note-box textarea::placeholder { color: var(--ink4); }
+.note-form-row { display: flex; gap: 8px; margin-top: 8px; align-items: center; flex-wrap: wrap; }
+.note-form-row select, .note-form-row input[type=date] { background: var(--line2); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 12px; font-family: 'Inter', sans-serif; color: var(--ink2); outline: none; }
+.note-form-row .spacer { flex: 1; }
+
+/* Gift add form */
+.gift-add-box { border: 1px dashed #c4b5d9; border-radius: var(--r); padding: 16px; background: #fdf9ff; }
+.gift-add-box textarea { width: 100%; min-height: 70px; background: var(--line2); border: 1px solid var(--line); border-radius: 7px; padding: 10px 12px; font-size: 13px; font-family: 'Inter', sans-serif; color: var(--ink); resize: vertical; outline: none; line-height: 1.6; }
+.gift-add-box textarea:focus { border-color: #9b72cf; }
+
+/* Prefs */
+.pref-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.pref-pill { padding: 5px 12px; border-radius: 99px; font-size: 11px; font-weight: 500; border: 1px solid var(--line); color: var(--ink3); cursor: pointer; transition: all 0.12s; }
+.pref-pill:hover { border-color: var(--ink3); }
+.pref-pill.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+/* Formula box */
+.formula-box { background: var(--ink); border-radius: var(--r); padding: 16px 20px; }
+.formula-label { font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.5px; font-family: 'DM Mono', monospace; margin-bottom: 8px; }
+.formula-code { font-family: 'DM Mono', monospace; font-size: 12px; color: #c8f060; word-break: break-all; cursor: pointer; }
+.formula-hint { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 6px; }
+
+/* Toast */
+#toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 20px; border-radius: 99px; font-size: 12px; font-family: 'Inter', sans-serif; opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 999; white-space: nowrap; }
+#toast.show { opacity: 1; }
+.empty-fb { text-align: center; padding: 24px; color: var(--ink4); font-size: 12px; border: 1px dashed var(--line); border-radius: var(--r); }
+.divider { height: 1px; background: var(--line); margin: 20px 0; }
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<!-- INDEX -->
+<div id="index-page">
+  <div class="site-header">
+    <div>
+      <div class="site-title">VIP Feedback <span>/ MGB · GFW · MBS</span></div>
+      <div class="site-sub">Member notes & feedback · stored locally · never in the sheet</div>
+    </div>
+    <div class="sync-area">
+      <div style="display:flex;gap:8px">
+        <button class="sync-btn" onclick="syncFromSheet()">⟳ Sync from Sheet</button>
+        <button class="sync-btn" onclick="document.getElementById('excel-upload-panel').style.display=document.getElementById('excel-upload-panel').style.display==='none'?'block':'none'">📊 Update 90d Data</button>
+      </div>
+      <div id="excel-upload-panel" style="display:none;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:8px;width:320px">
+        <div style="font-size:11px;font-weight:600;color:var(--ink3);margin-bottom:10px;font-family:'DM Mono',monospace">UPDATE 90D DATA FROM EXCEL</div>
+        <div style="margin-bottom:8px">
+          <label style="font-size:11px;color:var(--ink3);display:block;margin-bottom:4px">Deposit Excel</label>
+          <input type="file" id="dep-file" accept=".xlsx,.xls" style="font-size:11px;width:100%">
+        </div>
+        <div style="margin-bottom:12px">
+          <label style="font-size:11px;color:var(--ink3);display:block;margin-bottom:4px">Withdrawal Excel</label>
+          <input type="file" id="wd-file" accept=".xlsx,.xls" style="font-size:11px;width:100%">
+        </div>
+        <button class="btn primary" onclick="processExcelFiles()" style="width:100%">Calculate & Save 90d Data</button>
+        <div id="excel-status" style="font-size:11px;color:var(--ink4);margin-top:8px;font-family:'DM Mono',monospace"></div>
+      </div>
+      <div class="sync-status" id="sync-status">Never synced</div>
+    </div>
+  </div>
+  <div class="search-bar">
+    <span class="search-icon">⌕</span>
+    <input type="text" id="search" placeholder="Search by name, ID or phone…" oninput="renderIndex()">
+  </div>
+  <div class="filter-row">
+    <span class="chip on" data-f="all" onclick="setFilter(this)">All</span>
+    <span class="chip" data-f="feedback" onclick="setFilter(this)">Has feedback</span>
+    <span class="chip" data-f="diamond" onclick="setFilter(this)">Diamond</span>
+    <span class="chip" data-f="gold" onclick="setFilter(this)">Gold</span>
+    <span class="chip" data-f="SG" onclick="setFilter(this)">SG</span>
+    <span class="chip" data-f="MY" onclick="setFilter(this)">MY</span>
+  </div>
+  <div class="member-grid" id="member-grid"></div>
+</div>
+
+<!-- PROFILE -->
+<div id="profile-page">
+  <a class="back-link" onclick="showIndex()">← Back to all members</a>
+  <div id="profile-content"></div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// SHEET CONFIG
+// ─────────────────────────────────────────────
+const SHEET_ID = '1k2LwBNIOkHuLo4vAarCE0Iui8w5Sz18WWLcYQvhnUEQ';
+const SHEET_NAME = 'VIP List';
+
+// ─────────────────────────────────────────────
+// MEMBERS — live-updated from sheet or fallback
+// ─────────────────────────────────────────────
+let MEMBERS = [
+  {id:'BOTRT887',name:'Rebecca Oh Geok Peng',phone:'6587798389',region:'SG',brand:'MGB',level:11,tier:'VIP',deposit:1967511,nett:266388,loseRate:13.54,joined:'2021-07-24',lastDep:'2026-03-04',status:'active',dep90m1:3345.40,dep90m2:14116.18,dep90m3:3001.00,avgDep90:6820.86,loss90m1:1583.57,loss90m2:-6740.58,loss90m3:3001.00,avgLoss90:-718.67,peakLoss90:-2156.01},
+  {id:'BOTAW832',name:'Jeffrey Yeo',phone:'6592999983',region:'SG',brand:'MGB',level:11,tier:'VIP',deposit:1860558,nett:214920,loseRate:11.55,joined:'2021-10-01',lastDep:'2026-04-11',status:'active',dep90m1:11085.00,dep90m2:32480.00,dep90m3:12320.00,avgDep90:18628.33,loss90m1:5492.61,loss90m2:7138.86,loss90m3:4435.41,avgLoss90:5688.96,peakLoss90:17066.88},
+  {id:'BOTFF773',name:'',phone:'6582018609',region:'SG',brand:'MGB',level:11,tier:'',deposit:1447162,nett:143468,loseRate:9.91,joined:'2023-07-17',lastDep:'2026-04-14',status:'active',dep90m1:20566.95,dep90m2:31791.88,dep90m3:29696.02,avgDep90:27351.62,loss90m1:4164.20,loss90m2:4343.22,loss90m3:10339.82,avgLoss90:6282.41,peakLoss90:18847.24},
+  {id:'BOTGF798',name:'Ilkhamdani Bin Jumaat',phone:'6591673207',region:'SG',brand:'MGB',level:11,tier:'',deposit:1155914,nett:-7748,loseRate:-0.67,joined:'2022-08-29',lastDep:'2026-04-14',status:'active',dep90m1:28370.08,dep90m2:28748.37,dep90m3:24093.72,avgDep90:27070.72,loss90m1:-4010.02,loss90m2:6125.03,loss90m3:5783.46,avgLoss90:2632.82,peakLoss90:7898.47},
+  {id:'BOTPK762',name:'',phone:'6580230705',region:'SG',brand:'MGB',level:11,tier:'',deposit:978214,nett:47703,loseRate:4.88,joined:'2022-09-07',lastDep:'2026-04-14',status:'active',dep90m1:8340.00,dep90m2:1799.00,dep90m3:6276.00,avgDep90:5471.67,loss90m1:1388.22,loss90m2:688.50,loss90m3:2160.90,avgLoss90:1412.54,peakLoss90:4237.62},
+  {id:'BOTVK584',name:'',phone:'6597353954',region:'SG',brand:'MGB',level:11,tier:'',deposit:857534,nett:-72461,loseRate:-8.45,joined:'2022-08-20',lastDep:'2026-02-15',status:'active',dep90m1:0,dep90m2:105.00,dep90m3:0,avgDep90:35.00,loss90m1:0,loss90m2:105.00,loss90m3:0,avgLoss90:35.00,peakLoss90:105.00},
+  {id:'BOTSE837',name:'',phone:'6590623316',region:'SG',brand:'MGB',level:11,tier:'',deposit:812622,nett:133435,loseRate:16.42,joined:'2022-02-02',lastDep:'2026-04-13',status:'active',dep90m1:80.00,dep90m2:540.00,dep90m3:2789.00,avgDep90:1136.33,loss90m1:80.00,loss90m2:40.00,loss90m3:880.01,avgLoss90:333.34,peakLoss90:1000.01},
+  {id:'BOTIR512',name:'',phone:'6587853513',region:'SG',brand:'MGB',level:11,tier:'',deposit:762385,nett:191493,loseRate:25.12,joined:'2021-11-29',lastDep:'2026-03-14',status:'active',dep90m1:16513.39,dep90m2:663.91,dep90m3:410.00,avgDep90:5862.43,loss90m1:3404.00,loss90m2:207.90,loss90m3:-3872.76,avgLoss90:-86.95,peakLoss90:-260.86},
+  {id:'BOTEC393',name:'Muhammad Redzwan Bin Atan',phone:'6583285148',region:'SG',brand:'MGB',level:11,tier:'VIP',deposit:682468,nett:58818,loseRate:8.62,joined:'2022-01-04',lastDep:'2026-04-10',status:'active',dep90m1:23113.00,dep90m2:13499.50,dep90m3:7812.00,avgDep90:14808.17,loss90m1:-7334.84,loss90m2:3495.12,loss90m3:-3056.33,avgLoss90:-2298.68,peakLoss90:-6896.05},
+  {id:'BOTIA691',name:'',phone:'6583332501',region:'SG',brand:'MGB',level:11,tier:'',deposit:671200,nett:29899,loseRate:4.45,joined:'2023-07-17',lastDep:'2024-10-17',status:'inactive',dep90m1:0,dep90m2:0,dep90m3:0,avgDep90:0,loss90m1:0,loss90m2:0,loss90m3:0,avgLoss90:0,peakLoss90:0},
+  {id:'BOTPR323',name:'Ruban Kumar',phone:'6598578067',region:'SG',brand:'MGB',level:11,tier:'VIP',deposit:248319,nett:93519,loseRate:37.66,joined:'2022-07-27',lastDep:'2026-04-14',status:'active',dep90m1:8205.00,dep90m2:10670.00,dep90m3:5776.00,avgDep90:8217.00,loss90m1:1507.33,loss90m2:1313.98,loss90m3:2995.88,avgLoss90:1939.06,peakLoss90:5817.19},
+  {id:'BOTXF843',name:'',phone:'6583332501',region:'SG',brand:'GFW',level:11,tier:'',deposit:1104708,nett:-242089,loseRate:-21.91,joined:'2024-01-25',lastDep:'2025-07-16',status:'dormant',dep90m1:0,dep90m2:0,dep90m3:0,avgDep90:0,loss90m1:0,loss90m2:0,loss90m3:0,avgLoss90:0,peakLoss90:0},
+  {id:'BOTDX736',name:'Kelly Lim',phone:'6582330964',region:'SG',brand:'GFW',level:11,tier:'VIP',deposit:523820,nett:121494,loseRate:23.19,joined:'2023-10-22',lastDep:'2026-04-14',status:'active',dep90m1:31951.44,dep90m2:9300.32,dep90m3:16082.44,avgDep90:19111.40,loss90m1:-6700.88,loss90m2:7845.83,loss90m3:4049.52,avgLoss90:1731.49,peakLoss90:5194.47},
+  {id:'BOTAH437',name:'',phone:'6587853513',region:'SG',brand:'GFW',level:11,tier:'',deposit:298879,nett:51575,loseRate:17.26,joined:'2023-10-12',lastDep:'2026-04-14',status:'active',dep90m1:123750.99,dep90m2:5503.15,dep90m3:16785.90,avgDep90:48680.01,loss90m1:-5607.90,loss90m2:3452.82,loss90m3:3871.34,avgLoss90:572.09,peakLoss90:1716.26},
+  {id:'BOTID590',name:'',phone:'6598861371',region:'SG',brand:'GFW',level:11,tier:'',deposit:282628,nett:148282,loseRate:52.47,joined:'2024-01-05',lastDep:'2026-04-13',status:'active',dep90m1:7386.55,dep90m2:9800.20,dep90m3:4472.80,avgDep90:7219.85,loss90m1:-851.45,loss90m2:1425.44,loss90m3:2082.82,avgLoss90:885.60,peakLoss90:2656.81},
+  {id:'BOTPD321',name:'',phone:'6598541555',region:'SG',brand:'MBS',level:11,tier:'',deposit:589331,nett:-18639,loseRate:-3.16,joined:'2024-11-29',lastDep:'2026-04-13',status:'active',dep90m1:300.00,dep90m2:1600.00,dep90m3:22460.00,avgDep90:8120.00,loss90m1:-451.67,loss90m2:-547.46,loss90m3:6647.44,avgLoss90:1882.77,peakLoss90:5648.31},
+  {id:'BOTIB075',name:'Jeffrey Yeo',phone:'6592999983',region:'SG',brand:'MBS',level:11,tier:'VIP',deposit:446654,nett:42034,loseRate:9.41,joined:'2024-08-22',lastDep:'2026-04-14',status:'active',dep90m1:9119.00,dep90m2:17301.15,dep90m3:11520.00,avgDep90:12646.72,loss90m1:-2889.25,loss90m2:2167.91,loss90m3:6958.79,avgLoss90:2079.15,peakLoss90:6237.45},
+  {id:'BOTDY462',name:'Ng Layee Rachael',phone:'6598634160',region:'SG',brand:'MBS',level:11,tier:'VIP',deposit:192859,nett:31909,loseRate:16.55,joined:'2024-08-22',lastDep:'2026-04-14',status:'active',dep90m1:4571.00,dep90m2:7200.00,dep90m3:32677.00,avgDep90:14816.00,loss90m1:2310.43,loss90m2:1098.87,loss90m3:4635.69,avgLoss90:2681.66,peakLoss90:8044.99},
+  {id:'BOTKA680',name:'Muhammad Nur Hafiz Bin Azman',phone:'6587842150',region:'SG',brand:'MBS',level:10,tier:'VIP',deposit:186084,nett:11864,loseRate:6.38,joined:'2024-09-07',lastDep:'2026-04-14',status:'active',dep90m1:21625.00,dep90m2:28173.00,dep90m3:6080.00,avgDep90:18626.00,loss90m1:-8291.53,loss90m2:4591.11,loss90m3:3820.82,avgLoss90:40.13,peakLoss90:120.40},
+  {id:'BOTBI152',name:'Muhammad Redzwan Bin Atan',phone:'6583285148',region:'SG',brand:'MBS',level:10,tier:'VIP',deposit:122329,nett:36739,loseRate:30.03,joined:'2024-08-28',lastDep:'2026-04-14',status:'active',dep90m1:14917.00,dep90m2:7856.15,dep90m3:6427.30,avgDep90:9733.48,loss90m1:7230.21,loss90m2:1980.52,loss90m3:3873.83,avgLoss90:4361.52,peakLoss90:13084.56},
+  {id:'BOTKK133',name:'Mohd Izzath Amir',phone:'60108078804',region:'MY',brand:'MGB',level:11,tier:'VIP',deposit:2221045,nett:526208,loseRate:23.69,joined:'2021-07-02',lastDep:'2026-03-20',status:'active',dep90m1:3000.00,dep90m2:20800.00,dep90m3:500.00,avgDep90:8100.00,loss90m1:-2900.50,loss90m2:6800.00,loss90m3:500.00,avgLoss90:1466.50,peakLoss90:4399.50},
+  {id:'BOTVA979',name:'Noor Asman Bin Mohammad Noor',phone:'60148574747',region:'MY',brand:'MGB',level:11,tier:'VIP',deposit:1511933,nett:82754,loseRate:5.47,joined:'2021-04-19',lastDep:'2026-04-09',status:'active',dep90m1:9293.00,dep90m2:7830.00,dep90m3:14527.00,avgDep90:10550.00,loss90m1:1702.30,loss90m2:536.26,loss90m3:4219.80,avgLoss90:2152.79,peakLoss90:6458.36},
+  {id:'BOTQR035',name:'',phone:'60126837303',region:'MY',brand:'MGB',level:11,tier:'',deposit:1061750,nett:88410,loseRate:8.33,joined:'2021-10-11',lastDep:'2026-04-13',status:'active',dep90m1:32550.00,dep90m2:23000.00,dep90m3:20100.00,avgDep90:25216.67,loss90m1:-1596.96,loss90m2:5112.97,loss90m3:6127.51,avgLoss90:3214.51,peakLoss90:9643.52},
+  {id:'BOTOX935',name:'',phone:'60163436681',region:'MY',brand:'MGB',level:11,tier:'',deposit:940560,nett:139215,loseRate:14.80,joined:'2023-02-08',lastDep:'2024-10-19',status:'inactive',dep90m1:0,dep90m2:0,dep90m3:0,avgDep90:0,loss90m1:0,loss90m2:0,loss90m3:0,avgLoss90:0,peakLoss90:0},
+  {id:'BOTSW631',name:'',phone:'60102031239',region:'MY',brand:'MGB',level:11,tier:'',deposit:802091,nett:15218,loseRate:1.90,joined:'2021-08-29',lastDep:'2025-09-11',status:'dormant',dep90m1:0,dep90m2:0,dep90m3:0,avgDep90:0,loss90m1:0,loss90m2:0,loss90m3:0,avgLoss90:0,peakLoss90:0},
+  {id:'BOTHX421',name:'',phone:'60147583576',region:'MY',brand:'MGB',level:11,tier:'',deposit:763394,nett:176140,loseRate:23.07,joined:'2021-05-11',lastDep:'2026-04-13',status:'active',dep90m1:9250.00,dep90m2:120.00,dep90m3:14955.00,avgDep90:8108.33,loss90m1:8750.00,loss90m2:-1610.61,loss90m3:6713.85,avgLoss90:4617.75,peakLoss90:13853.24},
+  {id:'BOTGC938',name:'Muhammad Redzwan Bin Atan',phone:'6583285148',region:'SG',brand:'GFW',level:11,tier:'VIP',deposit:197656,nett:16668,loseRate:8.43,joined:'2023-10-03',lastDep:'2026-04-10',status:'active',dep90m1:12724.38,dep90m2:9332.80,dep90m3:8683.96,avgDep90:10247.05,loss90m1:2921.15,loss90m2:-1019.94,loss90m3:1437.09,avgLoss90:1112.77,peakLoss90:3338.30},
+  {id:'BOTDE180',name:'Jeffrey Yeo',phone:'6592999983',region:'SG',brand:'GFW',level:10,tier:'VIP',deposit:126680,nett:9226,loseRate:7.28,joined:'2023-10-22',lastDep:'2026-04-11',status:'active',dep90m1:17660.00,dep90m2:20390.00,dep90m3:5040.00,avgDep90:14363.33,loss90m1:-663.47,loss90m2:5308.06,loss90m3:1049.75,avgLoss90:1898.11,peakLoss90:5694.34},
+  {id:'BOTNS217',name:'Ruban Kumar',phone:'6598578067',region:'SG',brand:'MBS',level:10,tier:'',deposit:133025,nett:39798,loseRate:29.92,joined:'2024-11-05',lastDep:'2026-04-13',status:'active',dep90m1:7689.00,dep90m2:9960.00,dep90m3:5805.00,avgDep90:7818.00,loss90m1:254.36,loss90m2:7039.73,loss90m3:-804.91,avgLoss90:2163.06,peakLoss90:6489.18},
+  {id:'BOTAW832',name:'Jeffrey Yeo',phone:'6592999983',region:'SG',brand:'MGB',level:11,tier:'VIP',deposit:1860558,nett:214920,loseRate:11.55,joined:'2021-10-01',lastDep:'2026-04-11',status:'active',dep90m1:11085.00,dep90m2:32480.00,dep90m3:12320.00,avgDep90:18628.33,loss90m1:6493.03,loss90m2:19339.16,loss90m3:9136.32,avgLoss90:11656.17,peakLoss90:34968.51},
+  {id:'BOTFF773',name:'',phone:'6582018609',region:'SG',brand:'MGB',level:11,tier:'',deposit:1447162,nett:143468,loseRate:9.91,joined:'2023-07-17',lastDep:'2026-04-14',status:'active',dep90m1:20566.95,dep90m2:31791.88,dep90m3:29696.02,avgDep90:27351.62,loss90m1:5394.20,loss90m2:8283.22,loss90m3:10339.82,avgLoss90:8005.75,peakLoss90:24017.24},
+  {id:'BOTGF798',name:'Ilkhamdani Bin Jumaat',phone:'6591673207',region:'SG',brand:'MGB',level:11,tier:'',deposit:1155914,nett:-7748,loseRate:-0.67,joined:'2022-08-29',lastDep:'2026-04-14',status:'active',dep90m1:28370.08,dep90m2:28748.37,dep90m3:24093.72,avgDep90:27070.72,loss90m1:1572.98,loss90m2:6125.03,loss90m3:5783.46,avgLoss90:4493.82,peakLoss90:13481.47},
+  {id:'BOTPK762',name:'',phone:'6580230705',region:'SG',brand:'MGB',level:11,tier:'',deposit:978214,nett:47703,loseRate:4.88,joined:'2022-09-07',lastDep:'2026-04-14',status:'active',dep90m1:8340.00,dep90m2:1799.00,dep90m3:6276.00,avgDep90:5471.67,loss90m1:3388.22,loss90m2:688.50,loss90m3:4161.76,avgLoss90:2746.16,peakLoss90:8238.48},
+  {id:'BOTVK584',name:'',phone:'6597353954',region:'SG',brand:'MGB',level:11,tier:'',deposit:857534,nett:-72461,loseRate:-8.45,joined:'2022-08-20',lastDep:'2026-02-15',status:'active',dep90m1:0,dep90m2:105.00,dep90m3:0,avgDep90:35.00,loss90m1:0,loss90m2:105.00,loss90m3:0,avgLoss90:35.00,peakLoss90:105.00},
+  {id:'BOTSE837',name:'',phone:'6590623316',region:'SG',brand:'MGB',level:11,tier:'',deposit:812622,nett:133435,loseRate:16.42,joined:'2022-02-02',lastDep:'2026-04-13',status:'active',dep90m1:80.00,dep90m2:540.00,dep90m3:2789.00,avgDep90:1136.33,loss90m1:80.00,loss90m2:40.00,loss90m3:880.01,avgLoss90:333.34,peakLoss90:1000.01},
+  {id:'BOTIR512',name:'',phone:'6587853513',region:'SG',brand:'MGB',level:11,tier:'',deposit:762385,nett:191493,loseRate:25.12,joined:'2021-11-29',lastDep:'2026-03-14',status:'active',dep90m1:16513.39,dep90m2:663.91,dep90m3:410.00,avgDep90:5862.43,loss90m1:15203.08,loss90m2:207.90,loss90m3:110.11,avgLoss90:5173.70,peakLoss90:15521.09},
+  {id:'BOTEC393',name:'Muhammad Redzwan Bin Atan',phone:'6583285148',region:'SG',brand:'MGB',level:11,tier:'VIP',deposit:682468,nett:58818,loseRate:8.62,joined:'2022-01-04',lastDep:'2026-04-10',status:'active',dep90m1:23113.00,dep90m2:13499.50,dep90m3:7812.00,avgDep90:14808.17,loss90m1:10866.37,loss90m2:6295.63,loss90m3:2244.00,avgLoss90:6468.67,peakLoss90:19406.00},
+  {id:'BOTIA691',name:'',phone:'6583332501',region:'SG',brand:'MGB',level:11,tier:'',deposit:671200,nett:29899,loseRate:4.45,joined:'2023-07-17',lastDep:'2024-10-17',status:'inactive',dep90m1:0,dep90m2:0,dep90m3:0,avgDep90:0,loss90m1:0,loss90m2:0,loss90m3:0,avgLoss90:0,peakLoss90:0},
+  {id:'BOTPR323',name:'Ruban Kumar',phone:'6598578067',region:'SG',brand:'MGB',level:11,tier:'VIP',deposit:248319,nett:93519,loseRate:37.66,joined:'2022-07-27',lastDep:'2026-04-14',status:'active',dep90m1:8205.00,dep90m2:10670.00,dep90m3:5776.00,avgDep90:8217.00,loss90m1:5207.33,loss90m2:6713.98,loss90m3:4995.88,avgLoss90:5639.06,peakLoss90:16917.19},
+  {id:'BOTXF843',name:'',phone:'6583332501',region:'SG',brand:'GFW',level:11,tier:'',deposit:1104708,nett:-242089,loseRate:-21.91,joined:'2024-01-25',lastDep:'2025-07-16',status:'dormant',dep90m1:0,dep90m2:0,dep90m3:0,avgDep90:0,loss90m1:0,loss90m2:0,loss90m3:0,avgLoss90:0,peakLoss90:0},
+  {id:'BOTDX736',name:'Kelly Lim',phone:'6582330964',region:'SG',brand:'GFW',level:11,tier:'VIP',deposit:523820,nett:121494,loseRate:23.19,joined:'2023-10-22',lastDep:'2026-04-14',status:'active',dep90m1:9951.44,dep90m2:9300.32,dep90m3:16082.44,avgDep90:11778.07,loss90m1:6396.12,loss90m2:7845.83,loss90m3:10837.52,avgLoss90:8359.82,peakLoss90:25079.47},
+  {id:'BOTAH437',name:'',phone:'6587853513',region:'SG',brand:'GFW',level:11,tier:'',deposit:298879,nett:51575,loseRate:17.26,joined:'2023-10-12',lastDep:'2026-04-14',status:'active',dep90m1:49250.99,dep90m2:5503.15,dep90m3:12785.90,avgDep90:22513.35,loss90m1:48555.93,loss90m2:3452.82,loss90m3:10980.14,avgLoss90:20996.30,peakLoss90:62988.89},
+  {id:'BOTID590',name:'',phone:'6598861371',region:'SG',brand:'GFW',level:11,tier:'',deposit:282628,nett:148282,loseRate:52.47,joined:'2024-01-05',lastDep:'2026-04-13',status:'active',dep90m1:7386.55,dep90m2:9800.20,dep90m3:4472.80,avgDep90:7219.85,loss90m1:6948.55,loss90m2:8272.20,loss90m3:3082.82,avgLoss90:6101.19,peakLoss90:18303.57},
+  {id:'BOTPD321',name:'',phone:'6598541555',region:'SG',brand:'MBS',level:11,tier:'',deposit:589331,nett:-18639,loseRate:-3.16,joined:'2024-11-29',lastDep:'2026-04-13',status:'active',dep90m1:300.00,dep90m2:1600.00,dep90m3:18460.00,avgDep90:6786.67,loss90m1:-451.67,loss90m2:673.68,loss90m3:17161.20,avgLoss90:5794.40,peakLoss90:17383.21},
+  {id:'BOTIB075',name:'Jeffrey Yeo',phone:'6592999983',region:'SG',brand:'MBS',level:11,tier:'VIP',deposit:446654,nett:42034,loseRate:9.41,joined:'2024-08-22',lastDep:'2026-04-14',status:'active',dep90m1:9119.00,dep90m2:17301.15,dep90m3:11520.00,avgDep90:12646.72,loss90m1:2713.18,loss90m2:5068.06,loss90m3:6958.79,avgLoss90:4913.34,peakLoss90:14740.03},
+  {id:'BOTDY462',name:'Ng Layee Rachael',phone:'6598634160',region:'SG',brand:'MBS',level:11,tier:'VIP',deposit:192859,nett:31909,loseRate:16.55,joined:'2024-08-22',lastDep:'2026-04-14',status:'active',dep90m1:4571.00,dep90m2:7200.00,dep90m3:32677.00,avgDep90:14816.00,loss90m1:2310.43,loss90m2:4800.00,loss90m3:22035.72,avgLoss90:9715.38,peakLoss90:29146.15},
+  {id:'BOTKA680',name:'Muhammad Nur Hafiz Bin Azman',phone:'6587842150',region:'SG',brand:'MBS',level:10,tier:'VIP',deposit:186084,nett:11864,loseRate:6.38,joined:'2024-09-07',lastDep:'2026-04-14',status:'active',dep90m1:21625.00,dep90m2:28173.00,dep90m3:6080.00,avgDep90:18626.00,loss90m1:13849.78,loss90m2:19534.60,loss90m3:3820.82,avgLoss90:12401.73,peakLoss90:37205.20},
+  {id:'BOTBI152',name:'Muhammad Redzwan Bin Atan',phone:'6583285148',region:'SG',brand:'MBS',level:10,tier:'VIP',deposit:122329,nett:36739,loseRate:30.03,joined:'2024-08-28',lastDep:'2026-04-14',status:'active',dep90m1:14917.00,dep90m2:7856.15,dep90m3:6427.30,avgDep90:9733.48,loss90m1:9230.63,loss90m2:3380.87,loss90m3:3873.83,avgLoss90:5495.11,peakLoss90:16485.33},
+  {id:'BOTKK133',name:'Mohd Izzath Amir',phone:'60108078804',region:'MY',brand:'MGB',level:11,tier:'VIP',deposit:2221045,nett:526208,loseRate:23.69,joined:'2021-07-02',lastDep:'2026-03-20',status:'active',dep90m1:0,dep90m2:800.00,dep90m3:500.00,avgDep90:433.33,loss90m1:-1900.50,loss90m2:800.00,loss90m3:500.00,avgLoss90:-200.17,peakLoss90:-600.50},
+  {id:'BOTVA979',name:'Noor Asman Bin Mohammad Noor',phone:'60148574747',region:'MY',brand:'MGB',level:11,tier:'VIP',deposit:1511933,nett:82754,loseRate:5.47,joined:'2021-04-19',lastDep:'2026-04-09',status:'active',dep90m1:9293.00,dep90m2:4830.00,dep90m3:9527.00,avgDep90:7883.33,loss90m1:7016.30,loss90m2:3738.63,loss90m3:2221.80,avgLoss90:4325.58,peakLoss90:12976.73},
+  {id:'BOTQR035',name:'',phone:'60126837303',region:'MY',brand:'MGB',level:11,tier:'',deposit:1061750,nett:88410,loseRate:8.33,joined:'2021-10-11',lastDep:'2026-04-13',status:'active',dep90m1:32550.00,dep90m2:23000.00,dep90m3:20100.00,avgDep90:25216.67,loss90m1:4373.04,loss90m2:6312.97,loss90m3:6127.51,avgLoss90:5604.51,peakLoss90:16813.52},
+  {id:'BOTOX935',name:'',phone:'60163436681',region:'MY',brand:'MGB',level:11,tier:'',deposit:940560,nett:139215,loseRate:14.80,joined:'2023-02-08',lastDep:'2024-10-19',status:'inactive',dep90m1:0,dep90m2:0,dep90m3:0,avgDep90:0,loss90m1:0,loss90m2:0,loss90m3:0,avgLoss90:0,peakLoss90:0},
+  {id:'BOTSW631',name:'',phone:'60102031239',region:'MY',brand:'MGB',level:11,tier:'',deposit:802091,nett:15218,loseRate:1.90,joined:'2021-08-29',lastDep:'2025-09-11',status:'dormant',dep90m1:0,dep90m2:0,dep90m3:0,avgDep90:0,loss90m1:0,loss90m2:0,loss90m3:0,avgLoss90:0,peakLoss90:0},
+  {id:'BOTHX421',name:'',phone:'60147583576',region:'MY',brand:'MGB',level:11,tier:'',deposit:763394,nett:176140,loseRate:23.07,joined:'2021-05-11',lastDep:'2026-04-13',status:'active',dep90m1:9250.00,dep90m2:120.00,dep90m3:14955.00,avgDep90:8108.33,loss90m1:8750.00,loss90m2:-1610.61,loss90m3:13416.40,avgLoss90:6851.93,peakLoss90:20555.79},
+  {id:'BOTGC938',name:'Muhammad Redzwan Bin Atan',phone:'6583285148',region:'SG',brand:'GFW',level:11,tier:'VIP',deposit:197656,nett:16668,loseRate:8.43,joined:'2023-10-03',lastDep:'2026-04-10',status:'active',dep90m1:12724.38,dep90m2:9332.80,dep90m3:8683.96,avgDep90:10247.05,loss90m1:5121.49,loss90m2:6681.06,loss90m3:3937.96,avgLoss90:5246.84,peakLoss90:15740.51},
+  {id:'BOTDE180',name:'Jeffrey Yeo',phone:'6592999983',region:'SG',brand:'GFW',level:10,tier:'VIP',deposit:126680,nett:9226,loseRate:7.28,joined:'2023-10-22',lastDep:'2026-04-11',status:'active',dep90m1:17660.00,dep90m2:20390.00,dep90m3:5040.00,avgDep90:14363.33,loss90m1:9501.89,loss90m2:9308.06,loss90m3:1049.75,avgLoss90:6619.90,peakLoss90:19859.70},
+  {id:'BOTNS217',name:'Ruban Kumar',phone:'6598578067',region:'SG',brand:'MBS',level:10,tier:'',deposit:133025,nett:39798,loseRate:29.92,joined:'2024-11-05',lastDep:'2026-04-13',status:'active',dep90m1:7689.00,dep90m2:9960.00,dep90m3:5805.00,avgDep90:7818.00,loss90m1:5644.36,loss90m2:8059.73,loss90m3:3195.09,avgLoss90:5633.06,peakLoss90:16899.18},
+];
+
+// ─────────────────────────────────────────────
+// PRE-LOADED FEEDBACK
+// ─────────────────────────────────────────────
+const SEED_FEEDBACK = {
+  'BOTRT887': {
+    prefs: ['iPhone / Tech'],
+    notes: 'Continues to support MGB due to good relationship with Jacky. Currently playing other companies because MGB loses too much. Suggested improving loyalty programme.',
+    entries: [
+      { type:'gifts', date:'2025-01-01', text:'Received: 1x iPhone (MGB gift, few years ago)\nReceived: 1x Gold chain (few hundred SGD, 2025)', reward:'', followup:'' },
+      { type:'call', date:'2026-04-22', text:'• Member complains losing a lot. Keeps eating since 2022, feels something is not right.\n• Gift was fine but didn\'t reach her expectation. She mentioned the amount she lost, she should receive more. Only received 1x iPhone, 1x gold chain (few hundred). Says gift value getting lower over time.\n• Friend from another site lost lesser than her but received a legit Rolex (2nd hand, few thousand SGD). She continues to support MGB due to good relationship with Jacky.\n• Reward preference: iPhone / tech stuff.\n• Can contact anytime but needs a PM first before calling.\n• Currently playing other companies because MGB loses too much.\n• Suggested improving loyalty programme — doesn\'t get much despite constantly losing.\n• Promised free credit reward. Need to update within 1-2 days.', reward:'SGD 88 free credit (22/4)', followup:'2026-04-24' }
+    ]
+  },
+  'BOTAW832': {
+    prefs: ['Cash / Ang bao', 'Phone', 'Gold'],
+    notes: 'Multi-brand: MGB + GFW (BOTDE180) + MBS (BOTIB075). Active across all three. Deposit/withdrawal speed is a concern. Wants more slot variety.',
+    entries: [
+      { type:'gifts', date:'2025-01-01', text:'Received: 1x iPhone + 1x iPad (MGB gift, Christmas event, few years back)\nReceived: 1x Gold bracelet (2025)', reward:'', followup:'' },
+      { type:'call', date:'2026-04-11', text:'• So far so good. But sometimes deposit and withdrawal can take quite a bit of time — up to 30 mins wait for deposit. Withdrawal can be hours to next day.\n• Explore more slot games from the EU side. Open more variety.\n• Reward preference: free angpow with big value that can be directly cashed out.\n• Special day freebies, weekly special reward would be good. Free phone or exchange to cash / Rolex would be nice.', reward:'', followup:'' }
+    ]
+  },
+  'BOTEC393': {
+    prefs: ['Gold', 'Cash reward', 'iPhone'],
+    notes: 'Multi-brand: MGB + GFW (BOTGC938) + MBS (BOTBI152). Prefers texting over calls.',
+    entries: [
+      { type:'call', date:'2026-04-10', text:'• Overall gaming experience is good. Loves to see more lucky draws or special rewards for high level members.\n• Reward preference: gold chain / iPhone / tech.\n• Was fine with the weekly grab voucher arrangement.\n• Prefers last time format — had level-up cash reward and Rolex for VIP invitation.', reward:'', followup:'' },
+      { type:'wa', date:'2026-04-22', text:'• Prefers texting over calls.\n• So far ok with everything, just keeps losing that\'s all.\n• Reward preference: gold, cash reward or iPhone.', reward:'', followup:'' }
+    ]
+  },
+  'BOTPR323': {
+    prefs: ['Free credit', 'Gold', 'Omakase'],
+    notes: 'Ruban Kumar. Multi-brand: MGB + MBS (BOTNS217). Very high lose rate 37.66% — house favourite. Prefers free credit over physical gifts.',
+    entries: [
+      { type:'call', date:'2026-04-14', text:'Q: Apa yang buat abang berhargai sebagai VIP di MB8?\nA: Boleh dapat bonus/free credit, dapat menang/cuci duit.\n\nQ: What kind of VIP reward do you prefer?\nA: Free credit.\n\nTangible gift (iPhone / Gold chain, gold claim up to RM 4,000): Requesting free credit instead.', reward:'', followup:'' }
+    ]
+  },
+  'BOTDY462': {
+    prefs: ['Free credit', 'Tech / iPhone'],
+    notes: 'Ng Layee Rachael. SG MBS. Highly consistent — active almost daily. Joined Aug 2024, ramped up fast.',
+    entries: []
+  }
+};
+
+// ─────────────────────────────────────────────
+// FIREBASE
+// ─────────────────────────────────────────────
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBdNJLLsD4D2QpgNkpkxmzgllFPharYaFs",
+  authDomain: "vipfeedback-c3307.firebaseapp.com",
+  projectId: "vipfeedback-c3307",
+  storageBucket: "vipfeedback-c3307.firebasestorage.app",
+  messagingSenderId: "1032687738657",
+  appId: "1:1032687738657:web:ea74aec373d1190eabe860"
+};
+
+let db = null;
+
+function initFirebase() {
+  return new Promise((resolve) => {
+    if (db) { resolve(); return; }
+    const script1 = document.createElement('script');
+    script1.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js';
+    script1.onload = () => {
+      const script2 = document.createElement('script');
+      script2.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js';
+      script2.onload = () => {
+        firebase.initializeApp(FIREBASE_CONFIG);
+        db = firebase.firestore();
+        resolve();
+      };
+      document.head.appendChild(script2);
+    };
+    document.head.appendChild(script1);
+  });
+}
+
+// ─────────────────────────────────────────────
+// STORAGE — Firebase backed, localStorage cache
+// ─────────────────────────────────────────────
+const STORE_KEY = 'vip_feedback_v1';
+const MEMBERS_KEY = 'vip_members_v1';
+let store = {};
+
+async function loadStore() {
+  // Load members from localStorage cache first (fast)
+  try {
+    const saved = JSON.parse(localStorage.getItem(MEMBERS_KEY));
+    if (saved && saved.length) {
+      MEMBERS = saved;
+      const ts = localStorage.getItem(MEMBERS_KEY + '_ts');
+      if (ts) {
+        const el = document.getElementById('sync-status');
+        if (el) { el.textContent = 'Last synced: ' + ts; el.className = 'sync-status ok'; }
+      }
+    }
+  } catch {}
+
+  // Load feedback from Firebase
+  try {
+    await initFirebase();
+
+    // Always try loading members from Firebase — overrides hardcoded defaults
+    try {
+      const membersDoc = await db.collection('config').doc('members').get();
+      if (membersDoc.exists && membersDoc.data().list && membersDoc.data().list.length) {
+        MEMBERS = membersDoc.data().list;
+        localStorage.setItem(MEMBERS_KEY, JSON.stringify(MEMBERS));
+        localStorage.setItem(MEMBERS_KEY + '_ts', membersDoc.data().ts || '');
+        const el = document.getElementById('sync-status');
+        if (el) { el.textContent = 'Members loaded · ' + (membersDoc.data().ts||''); el.className = 'sync-status ok'; }
+      }
+    } catch(e) { console.warn('Members load from Firebase failed:', e); }
+    const snapshot = await db.collection('feedback').get();
+    store = {};
+    snapshot.forEach(doc => { store[doc.id] = doc.data(); });
+
+    // Seed only if no data exists for those members
+    for (const [id, seed] of Object.entries(SEED_FEEDBACK)) {
+      if (!store[id]) {
+        store[id] = { prefs: seed.prefs||[], notes: seed.notes||'', entries: seed.entries||[], _seeded: true };
+        await db.collection('feedback').doc(id).set(store[id]);
+      }
+    }
+  } catch(e) {
+    // Fallback to localStorage if Firebase fails
+    console.warn('Firebase load failed, using localStorage:', e);
+    try { store = JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch { store = {}; }
+    for (const [id, seed] of Object.entries(SEED_FEEDBACK)) {
+      if (!store[id]) { store[id] = { prefs: seed.prefs||[], notes: seed.notes||'', entries: seed.entries||[], _seeded: true }; }
+    }
+  }
+}
+
+async function saveStore(id) {
+  // Save specific member to Firebase
+  try {
+    await initFirebase();
+    await db.collection('feedback').doc(id).set(store[id]);
+  } catch(e) {
+    console.warn('Firebase save failed, using localStorage:', e);
+  }
+  // Always cache locally too
+  localStorage.setItem(STORE_KEY, JSON.stringify(store));
+}
+
+function getMember(id) {
+  if (!store[id]) store[id] = { prefs: [], notes: '', entries: [], _seeded: false };
+  return store[id];
+}
+
+// ─────────────────────────────────────────────
+// SHEET SYNC
+// ─────────────────────────────────────────────
+function parseNum(s) {
+  if (!s || s === '' || s === '#DIV/0!') return 0;
+  return parseFloat(String(s).replace(/[,%]/g, '')) || 0;
+}
+
+function parseDate(s) {
+  if (!s) return '';
+  // Handle "2021-07-24 16:24:44" → "2021-07-24"
+  return String(s).slice(0, 10);
+}
+
+function parseCSV(text) {
+  const rows = [];
+  let cur = '', inQ = false, row = [];
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (c === '"') { if (inQ && text[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
+    else if (c === ',' && !inQ) { row.push(cur); cur = ''; }
+    else if ((c === '\n' || c === '\r') && !inQ) {
+      if (c === '\r' && text[i+1] === '\n') i++;
+      row.push(cur); cur = ''; rows.push(row); row = [];
+    } else cur += c;
+  }
+  if (cur || row.length) { row.push(cur); rows.push(row); }
+  return rows;
+}
+
+async function syncFromSheet() {
+  const btn = document.querySelector('.sync-btn');
+  const statusEl = document.getElementById('sync-status');
+  btn.classList.add('syncing');
+  btn.textContent = '⟳ Syncing…';
+  statusEl.textContent = 'Fetching…';
+  statusEl.className = 'sync-status';
+
+  const url = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?tqx=out:csv&sheet=' + encodeURIComponent(SHEET_NAME);
+
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const text = await resp.text();
+    const rows = parseCSV(text);
+
+    // Skip header rows — find first row where col C looks like "BOT..."
+    const dataRows = rows.filter(r => r[2] && String(r[2]).trim().startsWith('BOT'));
+
+    if (!dataRows.length) throw new Error('No member rows found. Check sheet sharing settings.');
+
+    const newMembers = dataRows.map(r => {
+      // Columns (0-indexed):
+      // A=0 Region, B=1 Brand, C=2 MemberID, D=3 Name, E=4 Phone, F=5 Level, G=6 Tier
+      // H=7 TotalDeposit, I=8 TotalWithdrawal, J=9 Nett, K=10 LoseRate
+      // L=11 DateJoined, M=12 LastDep
+      // N=13 DepositMonth(NOW), O=14 Loss(NOW)
+      // P=15 (blank), Q=16 Month1Dep, R=17 Month2Dep, S=18 Month3Dep
+      // T=19 (blank), U=20 AvgDeposit
+      // V=21 (blank), W=22 Month1Loss, X=23 Month2Loss, Y=24 Month3Loss
+      // Z=25 AvgMonthlyLoss, AA=26 PeakMonthlyLoss, AB=27 MostPlayed, AC=28(blank), AD=29 MemberFeedback
+      const loseRateRaw = parseNum(r[10]);
+      const dep = parseNum(r[7]);
+      const nett = parseNum(r[9]);
+      const region = String(r[0]||'').trim();
+      let status = 'active';
+      const lastDep = parseDate(r[12]);
+      if (lastDep) {
+        const daysSince = (Date.now() - new Date(lastDep)) / 86400000;
+        if (daysSince > 180) status = 'dormant';
+        else if (daysSince > 60) status = 'inactive';
+      }
+      // Find existing member to preserve 90d data
+      const existing = MEMBERS.find(x => x.id === String(r[2]).trim()) || {};
+      return {
+        id: String(r[2]).trim(),
+        name: String(r[3]||'').trim(),
+        phone: String(r[4]||'').trim(),
+        region: region,
+        brand: String(r[1]||'').trim(),
+        level: parseInt(r[5]) || 11,
+        tier: String(r[6]||'').trim(),
+        deposit: dep,
+        withdrawal: parseNum(r[8]),
+        nett: nett,
+        loseRate: loseRateRaw,
+        joined: parseDate(r[11]),
+        lastDep: lastDep,
+        status: status,
+        mostPlayed: String(r[27]||'').trim() || existing.mostPlayed || '',
+        // Preserve existing 90d data — only sync updates basic member info
+        depMonth: existing.depMonth || 0,
+        lossNow: existing.lossNow || 0,
+        dep90m1: existing.dep90m1 || 0,
+        dep90m2: existing.dep90m2 || 0,
+        dep90m3: existing.dep90m3 || 0,
+        avgDep90: existing.avgDep90 || 0,
+        loss90m1: existing.loss90m1 || 0,
+        loss90m2: existing.loss90m2 || 0,
+        loss90m3: existing.loss90m3 || 0,
+        avgLoss90: existing.avgLoss90 || 0,
+        peakLoss90: existing.peakLoss90 || 0,
+      };
+    }).filter(m => m.id);
+
+    MEMBERS = newMembers;
+    const ts = new Date().toLocaleString('en-GB', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    localStorage.setItem(MEMBERS_KEY, JSON.stringify(MEMBERS));
+    localStorage.setItem(MEMBERS_KEY + '_ts', ts);
+
+    // Push members to Firebase so staff can see them
+    try {
+      await initFirebase();
+      await db.collection('config').doc('members').set({ list: MEMBERS, ts: ts });
+    } catch(e) { console.warn('Firebase members push failed:', e); }
+
+    statusEl.textContent = 'Synced ' + MEMBERS.length + ' members · ' + ts;
+    statusEl.className = 'sync-status ok';
+    toast('Synced ' + MEMBERS.length + ' members from sheet ✓');
+    renderIndex();
+    if (currentId) renderProfile(currentId);
+  } catch(e) {
+    statusEl.textContent = 'Sync failed: ' + e.message;
+    statusEl.className = 'sync-status err';
+    toast('Sync failed: ' + e.message);
+  }
+
+  btn.classList.remove('syncing');
+  btn.textContent = '⟳ Sync from Sheet';
+}
+
+// ─────────────────────────────────────────────
+// TIER / STATUS
+// ─────────────────────────────────────────────
+function getTier(m) {
+  if (m.deposit >= 800000) return 'diamond';
+  if (m.deposit >= 200000) return 'gold';
+  if (m.deposit >= 80000) return 'silver';
+  return 'risk';
+}
+function tierTag(t) {
+  const map = { diamond:['DIAMOND','t-diamond'], gold:['GOLD','t-gold'], silver:['SILVER','t-silver'], risk:['AT-RISK','t-risk'] };
+  const [label, cls] = map[t] || ['—',''];
+  return '<span class="tier-tag ' + cls + '">' + label + '</span>';
+}
+function statusTag(s) {
+  const map = { active:['ACTIVE','mv-green'], dormant:['DORMANT',''], inactive:['INACTIVE','mv-red'] };
+  const [label, cls] = map[s] || [String(s).toUpperCase(),''];
+  return '<span class="tier-tag" style="background:var(--line2);color:var(--ink3)">' + label + '</span>';
+}
+function fmtNum(n) { return Math.abs(Math.round(n)).toLocaleString(); }
+function fmtDate(s) {
+  if (!s) return '—';
+  try { return new Date(s).toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}); } catch { return s; }
+}
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function initials(m) {
+  if (m.name) return m.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  return m.id.slice(3,5);
+}
+function fmtMoney(n, curr) {
+  if (!n) return '—';
+  const sign = n < 0 ? '-' : '';
+  return sign + curr + ' ' + fmtNum(Math.abs(n));
+}
+
+// ─────────────────────────────────────────────
+// INDEX PAGE
+// ─────────────────────────────────────────────
+let activeFilter = 'all';
+
+function setFilter(el) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  activeFilter = el.dataset.f;
+  renderIndex();
+}
+
+function renderIndex() {
+  const q = (document.getElementById('search').value || '').toLowerCase();
+  let list = MEMBERS.filter(m => {
+    if (q && !m.id.toLowerCase().includes(q) && !(m.name||'').toLowerCase().includes(q) && !m.phone.includes(q)) return false;
+    if (activeFilter === 'feedback') { const d = getMember(m.id); return d.entries.length > 0 || d.notes; }
+    if (activeFilter === 'diamond') return getTier(m) === 'diamond';
+    if (activeFilter === 'gold') return getTier(m) === 'gold';
+    if (activeFilter === 'SG') return m.region === 'SG';
+    if (activeFilter === 'MY') return m.region === 'MY';
+    return true;
+  });
+
+  const grid = document.getElementById('member-grid');
+  if (!list.length) { grid.innerHTML = '<div class="no-members">No members match your search.</div>'; return; }
+
+  grid.innerHTML = list.map(m => {
+    const d = getMember(m.id);
+    const hasFb = d.entries.length > 0 || (d.notes && d.notes.trim());
+    const tier = getTier(m);
+    return '<div class="member-row' + (hasFb?' has-feedback':'') + '" style="position:relative">'
+      + '<div style="flex:1;display:flex;align-items:center;gap:16px;cursor:pointer;min-width:0" onclick="openProfile(\'' + m.id + '\')">'
+      + '<div class="member-avatar">' + initials(m) + '</div>'
+      + '<div class="member-info">'
+      + '<div class="member-name">' + (m.name || '<span style="color:var(--ink4)">' + m.id + '</span>') + '</div>'
+      + '<div class="member-meta">' + m.id + ' · ' + m.region + ' ' + m.brand + ' · ' + m.phone + '</div>'
+      + '</div></div>'
+      + '<div class="member-right">'
+      + (hasFb ? '<span class="has-badge">' + d.entries.length + ' log' + (d.entries.length!==1?'s':'') + '</span>' : '<span class="feedback-count">no logs</span>')
+      + tierTag(tier)
+      + '<button class="copy-link-btn" data-id="' + m.id + '" onclick="event.stopPropagation();copyMemberLink(this.dataset.id)">🔗 Copy</button>'
+      + '</div></div>';
+  }).join('');
+}
+
+// ─────────────────────────────────────────────
+// PROFILE PAGE
+// ─────────────────────────────────────────────
+let currentId = null;
+let activeTab = 'feedback'; // 'feedback' | 'gifts'
+
+function openProfile(id) {
+  currentId = id;
+  activeTab = 'feedback';
+  history.pushState(null, '', '#' + id);
+  document.getElementById('index-page').style.display = 'none';
+  document.getElementById('profile-page').style.display = 'block';
+  renderProfile(id);
+  window.scrollTo(0, 0);
+}
+
+function showIndex() {
+  history.pushState(null, '', location.pathname);
+  document.getElementById('profile-page').style.display = 'none';
+  document.getElementById('index-page').style.display = 'block';
+}
+
+function switchTab(tab) {
+  activeTab = tab;
+  if (currentId) renderProfile(currentId);
+}
+
+function build90dHtml(m, curr) {
+  function sc(n) {
+    if (!n) return '<span style="color:var(--ink4)">—</span>';
+    const neg = n < 0;
+    // Positive = customer lost (red), Negative = customer won (green)
+    return '<span class="' + (neg?'mv-green':'mv-red') + '">' + (neg?'+':'-') + curr + ' ' + fmtNum(Math.abs(n)) + '</span>';
+  }
+  function sp(n) { return n ? curr + ' ' + fmtNum(n) : '<span style="color:var(--ink4)">—</span>'; }
+  const cells = [
+    ['Deposit this month', sp(m.depMonth)],
+    ['Loss this month', sc(m.lossNow)],
+    ['Most played', esc(m.mostPlayed) || '—'],
+    ['Dep 3 months ago', sp(m.dep90m1)],
+    ['Dep 2 months ago', sp(m.dep90m2)],
+    ['Dep last month', sp(m.dep90m3)],
+    ['Loss 3 months ago', sc(m.loss90m1)],
+    ['Loss 2 months ago', sc(m.loss90m2)],
+    ['Loss last month', sc(m.loss90m3)],
+    ['Avg deposit (90d)', sp(m.avgDep90)],
+    ['Avg loss (90d)', sc(m.avgLoss90)],
+    ['Total loss (90d)', sc(m.peakLoss90)],
+  ];
+  return '<div class="stats-90d">'
+    + '<div class="stats-90d-head" onclick="toggle90d(this)"><span>📊 Last 90 Days</span><span id="toggle90d-arrow">▲</span></div>'
+    + '<div class="stats-90d-body" id="stats-90d-body">'
+    + cells.map(([lbl,val]) => '<div class="stat-cell"><div class="stat-lbl">' + lbl + '</div><div class="stat-val">' + val + '</div></div>').join('')
+    + '</div></div>';
+}
+
+function toggle90d(el) {
+  const body = document.getElementById('stats-90d-body');
+  const arrow = document.getElementById('toggle90d-arrow');
+  if (body.style.display === 'none') { body.style.display = 'grid'; arrow.textContent = '▲'; }
+  else { body.style.display = 'none'; arrow.textContent = '▼'; }
+}
+
+function buildEntriesHtml(id, d, tab) {
+  const isGift = tab === 'gifts';
+  const filtered = d.entries.filter(e => isGift ? e.type === 'gifts' : e.type !== 'gifts');
+  const realIdxMap = d.entries.map((e,i) => i).filter(i => isGift ? d.entries[i].type === 'gifts' : d.entries[i].type !== 'gifts').reverse();
+
+  if (!filtered.length) {
+    return '<div class="empty-fb">' + (isGift ? 'No gifts recorded yet. Add one below.' : 'No feedback logs yet. Add the first one below.') + '</div>';
+  }
+
+  return filtered.slice().reverse().map(function(e, revIdx) {
+    var realIdx = realIdxMap[revIdx];
+    var eid = id + '-e' + realIdx;
+    var typeLabel = e.type==='call' ? '📞 Call' : e.type==='wa' ? '💬 WhatsApp' : e.type==='tg' ? '✈️ Telegram' : e.type==='gifts' ? '🎁 Gifts given' : '📝 Note';
+    var rewardHtml = e.reward
+      ? '<span>Gift/reward: <strong>' + esc(e.reward) + '</strong></span>'
+      : '<span style="color:var(--ink4)">No reward recorded</span>';
+    var followupHtml = e.followup ? '<span>Follow-up: <strong>' + e.followup + '</strong></span>' : '';
+    return '<div class="feedback-card" id="fc-' + eid + '">'
+      + '<div class="feedback-card-head">'
+      + '<span class="contact-type ct-' + e.type + '">' + typeLabel + '</span>'
+      + '<span class="feedback-date">' + fmtDate(e.date) + '</span>'
+      + '<button class="delete-entry-btn" onclick="deleteEntry(\'' + id + '\',' + realIdx + ')" title="Delete">🗑 Delete</button>'
+      + '</div>'
+      + '<div class="feedback-body"><div class="feedback-text">' + esc(e.text) + '</div></div>'
+      + '<div class="feedback-footer" style="flex-direction:column;gap:6px">'
+      + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
+      + rewardHtml
+      + '<button class="edit-gift-btn" id="egb-' + eid + '" onclick="showGiftEdit(\'' + id + '\',' + realIdx + ',\'' + eid + '\')">✏️ Edit</button>'
+      + '</div>'
+      + '<div id="gift-edit-' + eid + '" style="display:none"><div class="gift-edit-inline">'
+      + '<input type="text" id="gi-' + eid + '" value="' + esc(e.reward||'') + '" placeholder="e.g. SGD 88 free credit, iPhone 15...">'
+      + '<button class="save-gift-btn" onclick="saveGift(\'' + id + '\',' + realIdx + ',\'' + eid + '\')">Save</button>'
+      + '<button class="cancel-gift-btn" onclick="hideGiftEdit(\'' + eid + '\')">Cancel</button>'
+      + '</div></div>'
+      + followupHtml
+      + '</div></div>';
+  }).join('');
+}
+
+function renderProfile(id) {
+  const m = MEMBERS.find(x => x.id === id);
+  if (!m) { document.getElementById('profile-content').innerHTML = '<p style="color:var(--ink4)">Member not found.</p>'; return; }
+  const d = getMember(id);
+  const tier = getTier(m);
+  const curr = m.region === 'SG' ? 'SGD' : 'MYR';
+  const link = 'https://testmod0.github.io/vip/#' + id;
+  const formula = '=HYPERLINK("' + link + '","\\uD83D\\uDCCB ' + (m.name||m.id) + '")';
+
+  const PREFS = ['Free credit','iPhone / Tech','Gold chain','Cash / Ang bao','Flight ticket','Omakase','Rolex / Watch','Hotel stay','Gold bracelet'];
+  const prefsHtml = PREFS.map(p =>
+    '<span class="pref-pill' + (d.prefs.includes(p)?' on':'') + '" onclick="togglePref(\'' + id + '\',\'' + p + '\',this)">' + p + '</span>'
+  ).join('');
+
+  const giftCount = d.entries.filter(e => e.type === 'gifts').length;
+  const fbCount = d.entries.filter(e => e.type !== 'gifts').length;
+
+  const isGiftTab = activeTab === 'gifts';
+  const entriesHtml = buildEntriesHtml(id, d, activeTab);
+
+  const addFormHtml = isGiftTab
+    ? '<div class="gift-add-box" style="margin-top:12px">'
+      + '<div style="font-size:11px;color:#7a5fa0;margin-bottom:8px;font-family:\'DM Mono\',monospace">Add gift record</div>'
+      + '<textarea id="new-note-' + id + '" placeholder="Describe the gift given e.g. 1x iPhone 15 Pro, Gold chain 916..." rows="3"></textarea>'
+      + '<div class="note-form-row">'
+      + '<input type="date" id="new-date-' + id + '" value="' + new Date().toISOString().slice(0,10) + '">'
+      + '<input type="text" id="new-reward-' + id + '" placeholder="Value / note e.g. ~SGD 1,200" style="flex:1;background:var(--line2);border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:12px;font-family:\'Inter\',sans-serif;color:var(--ink2);outline:none;">'
+      + '<button class="btn primary" style="background:#5b3d99;border-color:#5b3d99" onclick="addGiftEntry(\'' + id + '\')">+ Add gift</button>'
+      + '</div></div>'
+    : '<div class="add-note-box" style="margin-top:12px">'
+      + '<div style="font-size:11px;color:var(--ink4);margin-bottom:8px;font-family:\'DM Mono\',monospace">Add new log entry</div>'
+      + '<textarea id="new-note-' + id + '" placeholder="Type call notes, WhatsApp summary, or any feedback…" rows="4"></textarea>'
+      + '<div class="note-form-row">'
+      + '<select id="new-type-' + id + '"><option value="call">📞 Call</option><option value="wa">💬 WhatsApp</option><option value="tg">✈️ Telegram</option><option value="note">📝 Note</option></select>'
+      + '<input type="date" id="new-date-' + id + '" value="' + new Date().toISOString().slice(0,10) + '">'
+      + '<input type="text" id="new-reward-' + id + '" placeholder="Gift / reward given" style="flex:1;background:var(--line2);border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:12px;font-family:\'Inter\',sans-serif;color:var(--ink2);outline:none;">'
+      + '<div class="spacer"></div>'
+      + '<button class="btn primary" onclick="addEntry(\'' + id + '\')">+ Add log</button>'
+      + '</div></div>';
+
+  const formulaDisplay = '=HYPERLINK("' + link + '","📋 ' + (m.name||m.id) + '")';
+
+  document.getElementById('profile-content').innerHTML =
+    '<div class="profile-hero">'
+    + '<div class="hero-top">'
+    + '<div class="hero-avatar">' + initials(m) + '</div>'
+    + '<div style="flex:1;min-width:0">'
+    + '<div class="hero-name">' + esc(m.name || m.id) + '</div>'
+    + '<div class="hero-sub">' + m.id + ' · ' + m.region + ' ' + m.brand + ' · Lv' + m.level + ' · ' + m.phone + '</div>'
+    + '<div class="hero-tags">' + tierTag(tier) + statusTag(m.status) + (m.tier ? '<span class="tier-tag" style="background:#f0f4fb;color:#1a3d6b">TAGGED VIP</span>' : '') + '</div>'
+    + '</div>'
+    + '<div class="hero-actions"><button class="btn ghost" onclick="copyText(\'' + link + '\',\'Link copied!\')">🔗 Copy link</button></div>'
+    + '</div>'
+    + '<div class="hero-metrics">'
+    + '<div class="metric-cell"><div class="metric-label">Total deposit</div><div class="metric-value mv-blue">' + curr + ' ' + fmtNum(m.deposit) + '</div></div>'
+    + '<div class="metric-cell"><div class="metric-label">House nett</div><div class="metric-value ' + (m.nett>=0?'mv-green':'mv-red') + '">' + curr + ' ' + fmtNum(m.nett) + '</div></div>'
+    + '<div class="metric-cell"><div class="metric-label">Lose rate</div><div class="metric-value ' + (m.loseRate>15?'mv-green':m.loseRate<3?'mv-red':'') + '">' + m.loseRate.toFixed(2) + '%</div></div>'
+    + '<div class="metric-cell"><div class="metric-label">Last deposit</div><div class="metric-value">' + fmtDate(m.lastDep) + '</div></div>'
+    + '</div></div>'
+
+    + build90dHtml(m, curr)
+
+    + '<div class="section">'
+    + '<div class="section-head"><span class="section-label">Reward preferences</span><button class="btn ghost" onclick="savePrefs(\'' + id + '\')">Save</button></div>'
+    + '<div class="pref-grid" id="prefs-' + id + '">' + prefsHtml + '</div>'
+    + '</div>'
+
+    + '<div class="divider"></div>'
+
+    + '<div class="section">'
+    + '<div class="section-head"><span class="section-label">Private notes</span><button class="btn ghost" onclick="saveNotes(\'' + id + '\')">Save</button></div>'
+    + '<div class="add-note-box" style="margin-bottom:0">'
+    + '<textarea id="notes-' + id + '" placeholder="Internal notes about this member…" rows="3">' + esc(d.notes||'') + '</textarea>'
+    + '</div></div>'
+
+    + '<div class="divider"></div>'
+
+    + '<div class="section">'
+    + '<div class="section-head"><span class="section-label">Activity log</span></div>'
+    + '<div class="log-tabs">'
+    + '<button class="log-tab' + (!isGiftTab?' active':'') + '" onclick="switchTab(\'feedback\')">💬 Feedback (' + fbCount + ')</button>'
+    + '<button class="log-tab' + (isGiftTab?' active-gift':'') + '" onclick="switchTab(\'gifts\')">🎁 Gifts given (' + giftCount + ')</button>'
+    + '</div>'
+    + entriesHtml
+    + addFormHtml
+    + '</div>'
+
+    + '<div class="divider"></div>'
+
+    + '<div class="section">'
+    + '<div class="section-head"><span class="section-label">Sheet link formula</span></div>'
+    + '<div class="formula-box">'
+    + '<div class="formula-label">Paste into Feedback column in Google Sheets</div>'
+    + '<div class="formula-code" onclick="copyText(\'' + formulaDisplay.replace(/'/g,"\\'") + '\',\'Formula copied!\')" title="Click to copy">' + esc(formulaDisplay) + '</div>'
+    + '<div class="formula-hint">Click to copy</div>'
+    + '</div></div>';
+}
+
+// ─────────────────────────────────────────────
+// ACTIONS
+// ─────────────────────────────────────────────
+async function addEntry(id) {
+  const text = document.getElementById('new-note-'+id).value.trim();
+  if (!text) return toast('Please type something first');
+  const d = getMember(id);
+  d.entries.push({
+    type: document.getElementById('new-type-'+id).value,
+    date: document.getElementById('new-date-'+id).value,
+    text, reward: document.getElementById('new-reward-'+id).value.trim(), followup: ''
+  });
+  await saveStore(id); toast('Log saved ✓'); renderProfile(id);
+}
+
+async function addGiftEntry(id) {
+  const text = document.getElementById('new-note-'+id).value.trim();
+  if (!text) return toast('Please describe the gift first');
+  const d = getMember(id);
+  d.entries.push({
+    type: 'gifts',
+    date: document.getElementById('new-date-'+id).value,
+    text, reward: document.getElementById('new-reward-'+id).value.trim(), followup: ''
+  });
+  await saveStore(id); toast('Gift record saved ✓'); renderProfile(id);
+}
+
+async function saveNotes(id) {
+  const d = getMember(id);
+  d.notes = document.getElementById('notes-'+id).value;
+  await saveStore(id); toast('Notes saved ✓');
+  const ta = document.getElementById('notes-'+id);
+  if (ta) { ta.style.borderColor = '#1a6644'; setTimeout(()=>ta.style.borderColor='',1200); }
+}
+
+async function savePrefs(id) {
+  const d = getMember(id);
+  d.prefs = Array.from(document.querySelectorAll('#prefs-'+id+' .pref-pill.on')).map(e=>e.textContent.trim());
+  await saveStore(id); toast('Preferences saved ✓');
+}
+
+function togglePref(id, pref, el) { el.classList.toggle('on'); }
+
+async function deleteEntry(id, realIdx) {
+  if (!confirm('Delete this log entry? This cannot be undone.')) return;
+  const d = getMember(id);
+  d.entries.splice(realIdx, 1);
+  await saveStore(id); toast('Log deleted'); renderProfile(id);
+}
+
+function showGiftEdit(id, realIdx, entryId) {
+  document.getElementById('gift-edit-'+entryId).style.display = 'block';
+  document.getElementById('egb-'+entryId).style.display = 'none';
+  const input = document.getElementById('gi-'+entryId);
+  if (input) { input.focus(); input.select(); }
+}
+function hideGiftEdit(entryId) {
+  document.getElementById('gift-edit-'+entryId).style.display = 'none';
+  document.getElementById('egb-'+entryId).style.display = '';
+}
+async function saveGift(id, realIdx, entryId) {
+  const val = document.getElementById('gi-'+entryId).value.trim();
+  const d = getMember(id);
+  d.entries[realIdx].reward = val;
+  await saveStore(id); toast('Gift updated ✓'); renderProfile(id);
+}
+
+// ─────────────────────────────────────────────
+// EXCEL 90D PROCESSING (SheetJS)
+// ─────────────────────────────────────────────
+function loadSheetJS() {
+  return new Promise((resolve) => {
+    if (window.XLSX) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload = resolve;
+    document.head.appendChild(s);
+  });
+}
+
+async function processExcelFiles() {
+  const depFile = document.getElementById('dep-file').files[0];
+  const wdFile = document.getElementById('wd-file').files[0];
+  const statusEl = document.getElementById('excel-status');
+
+  if (!depFile || !wdFile) { statusEl.textContent = '⚠️ Please select both files'; return; }
+
+  statusEl.textContent = 'Loading SheetJS…';
+  await loadSheetJS();
+
+  statusEl.textContent = 'Reading files…';
+
+  function readXlsx(file) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const wb = XLSX.read(e.target.result, { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        resolve(XLSX.utils.sheet_to_json(ws));
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  const depData = await readXlsx(depFile);
+  const wdData = await readXlsx(wdFile);
+
+  // Parse dates and group by member + month
+  function getMonth(row) {
+    const d = new Date(row['Created Date Time'] || row['Approved Date Time'] || '');
+    if (isNaN(d)) return null;
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+  }
+
+  // Find the 3 most recent months in data
+  const allMonths = [...new Set(depData.map(getMonth).filter(Boolean))].sort();
+  const months = allMonths.slice(-3); // last 3 months
+  if (months.length < 3) { statusEl.textContent = '⚠️ Need at least 3 months of data'; return; }
+
+  statusEl.textContent = 'Calculating for months: ' + months.join(', ') + '…';
+
+  const updated = MEMBERS.map(m => {
+    const mDep = depData.filter(r => r['Member ID'] === m.id);
+    const mWd = wdData.filter(r => r['Member ID'] === m.id);
+
+    const depByMonth = months.map(mo => mDep.filter(r => getMonth(r)===mo).reduce((s,r)=>{
+      const amt = parseFloat(String(r['Amount']||0).replace(/,/g,'')) || 0;
+      return s + amt;
+    }, 0));
+    const wdByMonth = months.map(mo => mWd.filter(r => getMonth(r)===mo).reduce((s,r)=>{
+      const amt = parseFloat(String(r['Amount']||0).replace(/,/g,'')) || 0;
+      return s + amt;
+    }, 0));
+    const lossByMonth = depByMonth.map((d,i) => d - wdByMonth[i]);
+
+    const avgDep  = depByMonth.reduce((a,b)=>a+b,0) / 3;
+    const avgLoss = lossByMonth.reduce((a,b)=>a+b,0) / 3;
+    const totalLoss = lossByMonth.reduce((a,b)=>a+b,0);
+
+    return {
+      ...m,
+      dep90m1: Math.round(depByMonth[0]*100)/100,
+      dep90m2: Math.round(depByMonth[1]*100)/100,
+      dep90m3: Math.round(depByMonth[2]*100)/100,
+      avgDep90: Math.round(avgDep*100)/100,
+      loss90m1: Math.round(lossByMonth[0]*100)/100,
+      loss90m2: Math.round(lossByMonth[1]*100)/100,
+      loss90m3: Math.round(lossByMonth[2]*100)/100,
+      avgLoss90: Math.round(avgLoss*100)/100,
+      peakLoss90: Math.round(totalLoss*100)/100,
+    };
+  });
+
+  MEMBERS = updated;
+  const ts = new Date().toLocaleString('en-GB', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+  localStorage.setItem(MEMBERS_KEY, JSON.stringify(MEMBERS));
+  localStorage.setItem(MEMBERS_KEY + '_ts', ts);
+
+  // Push to Firebase so staff sees updated data
+  try {
+    await initFirebase();
+    await db.collection('config').doc('members').set({ list: MEMBERS, ts: ts });
+    statusEl.style.color = 'var(--green)';
+    statusEl.textContent = '✅ 90d data updated & saved to cloud for ' + MEMBERS.length + ' members';
+  } catch(e) {
+    statusEl.textContent = '✅ Calculated locally (Firebase save failed)';
+  }
+
+  renderIndex();
+  if (currentId) renderProfile(currentId);
+}
+
+function copyMemberLink(id) {
+  const m = MEMBERS.find(x => x.id === id);
+  const name = m ? (m.name || m.id) : id;
+  const link = 'https://testmod0.github.io/vip/#' + id;
+  const formula = '=HYPERLINK("' + link + '","📋 ' + name + '")';
+  navigator.clipboard.writeText(formula).then(()=>toast('Sheet formula copied ✓')).catch(()=>prompt('Copy formula:',formula));
+}
+
+function copyText(text, msg) {
+  navigator.clipboard.writeText(text).then(()=>toast(msg||'Copied!')).catch(()=>prompt('Copy:',text));
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2000);
+}
+
+// ─────────────────────────────────────────────
+// ROUTING
+// ─────────────────────────────────────────────
+window.onload = async () => {
+  document.getElementById('member-grid').innerHTML = '<div class="no-members">⟳ Loading…</div>';
+  await loadStore();
+  const hash = location.hash.replace('#','');
+  if (hash && hash.startsWith('BOT')) { openProfile(hash); }
+  else { renderIndex(); }
+};
+
+window.addEventListener('popstate', () => {
+  const hash = location.hash.replace('#','');
+  if (hash && hash.startsWith('BOT')) { openProfile(hash); }
+  else {
+    document.getElementById('profile-page').style.display = 'none';
+    document.getElementById('index-page').style.display = 'block';
+  }
+});
+</script>
+</body>
+</html>
