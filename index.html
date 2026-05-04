@@ -176,7 +176,23 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--ink
       <div class="site-sub">Member notes & feedback · stored locally · never in the sheet</div>
     </div>
     <div class="sync-area">
-      <button class="sync-btn" onclick="syncFromSheet()">⟳ Sync from Sheet</button>
+      <div style="display:flex;gap:8px">
+        <button class="sync-btn" onclick="syncFromSheet()">⟳ Sync from Sheet</button>
+        <button class="sync-btn" onclick="document.getElementById('excel-upload-panel').style.display=document.getElementById('excel-upload-panel').style.display==='none'?'block':'none'">📊 Update 90d Data</button>
+      </div>
+      <div id="excel-upload-panel" style="display:none;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:8px;width:320px">
+        <div style="font-size:11px;font-weight:600;color:var(--ink3);margin-bottom:10px;font-family:'DM Mono',monospace">UPDATE 90D DATA FROM EXCEL</div>
+        <div style="margin-bottom:8px">
+          <label style="font-size:11px;color:var(--ink3);display:block;margin-bottom:4px">Deposit Excel</label>
+          <input type="file" id="dep-file" accept=".xlsx,.xls" style="font-size:11px;width:100%">
+        </div>
+        <div style="margin-bottom:12px">
+          <label style="font-size:11px;color:var(--ink3);display:block;margin-bottom:4px">Withdrawal Excel</label>
+          <input type="file" id="wd-file" accept=".xlsx,.xls" style="font-size:11px;width:100%">
+        </div>
+        <button class="btn primary" onclick="processExcelFiles()" style="width:100%">Calculate & Save 90d Data</button>
+        <div id="excel-status" style="font-size:11px;color:var(--ink4);margin-top:8px;font-family:'DM Mono',monospace"></div>
+      </div>
       <div class="sync-status" id="sync-status">Never synced</div>
     </div>
   </div>
@@ -212,35 +228,63 @@ const SHEET_NAME = 'VIP List';
 // MEMBERS — live-updated from sheet or fallback
 // ─────────────────────────────────────────────
 let MEMBERS = [
-  {id:'BOTRT887',name:'Rebecca Oh Geok Peng',phone:'6587798389',region:'SG',brand:'MGB',level:11,tier:'VIP',deposit:1967511,nett:266388,loseRate:13.54,joined:'2021-07-24',lastDep:'2026-03-04',status:'active'},
-  {id:'BOTAW832',name:'Jeffrey Yeo',phone:'6592999983',region:'SG',brand:'MGB',level:11,tier:'VIP',deposit:1860558,nett:214920,loseRate:11.55,joined:'2021-10-01',lastDep:'2026-04-11',status:'active'},
-  {id:'BOTFF773',name:'',phone:'6582018609',region:'SG',brand:'MGB',level:11,tier:'',deposit:1447162,nett:143468,loseRate:9.91,joined:'2023-07-17',lastDep:'2026-04-14',status:'active'},
-  {id:'BOTGF798',name:'Ilkhamdani Bin Jumaat',phone:'6591673207',region:'SG',brand:'MGB',level:11,tier:'',deposit:1155914,nett:-7748,loseRate:-0.67,joined:'2022-08-29',lastDep:'2026-04-14',status:'active'},
-  {id:'BOTPK762',name:'',phone:'6580230705',region:'SG',brand:'MGB',level:11,tier:'',deposit:978214,nett:47703,loseRate:4.88,joined:'2022-09-07',lastDep:'2026-04-14',status:'active'},
-  {id:'BOTVK584',name:'',phone:'6597353954',region:'SG',brand:'MGB',level:11,tier:'',deposit:857534,nett:-72461,loseRate:-8.45,joined:'2022-08-20',lastDep:'2026-02-15',status:'active'},
-  {id:'BOTSE837',name:'',phone:'6590623316',region:'SG',brand:'MGB',level:11,tier:'',deposit:812622,nett:133435,loseRate:16.42,joined:'2022-02-02',lastDep:'2026-04-13',status:'active'},
-  {id:'BOTIR512',name:'',phone:'6587853513',region:'SG',brand:'MGB',level:11,tier:'',deposit:762385,nett:191493,loseRate:25.12,joined:'2021-11-29',lastDep:'2026-03-14',status:'active'},
-  {id:'BOTEC393',name:'Muhammad Redzwan Bin Atan',phone:'6583285148',region:'SG',brand:'MGB',level:11,tier:'VIP',deposit:682468,nett:58818,loseRate:8.62,joined:'2022-01-04',lastDep:'2026-04-10',status:'active'},
-  {id:'BOTIA691',name:'',phone:'6583332501',region:'SG',brand:'MGB',level:11,tier:'',deposit:671200,nett:29899,loseRate:4.45,joined:'2023-07-17',lastDep:'2024-10-17',status:'inactive'},
-  {id:'BOTPR323',name:'Ruban Kumar',phone:'6598578067',region:'SG',brand:'MGB',level:11,tier:'VIP',deposit:248319,nett:93519,loseRate:37.66,joined:'2022-07-27',lastDep:'2026-04-14',status:'active'},
-  {id:'BOTXF843',name:'',phone:'6583332501',region:'SG',brand:'GFW',level:11,tier:'',deposit:1104708,nett:-242089,loseRate:-21.91,joined:'2024-01-25',lastDep:'2025-07-16',status:'dormant'},
-  {id:'BOTDX736',name:'Kelly Lim',phone:'6582330964',region:'SG',brand:'GFW',level:11,tier:'VIP',deposit:523820,nett:121494,loseRate:23.19,joined:'2023-10-22',lastDep:'2026-04-14',status:'active'},
-  {id:'BOTAH437',name:'',phone:'6587853513',region:'SG',brand:'GFW',level:11,tier:'',deposit:298879,nett:51575,loseRate:17.26,joined:'2023-10-12',lastDep:'2026-04-14',status:'active'},
-  {id:'BOTID590',name:'',phone:'6598861371',region:'SG',brand:'GFW',level:11,tier:'',deposit:282628,nett:148282,loseRate:52.47,joined:'2024-01-05',lastDep:'2026-04-13',status:'active'},
-  {id:'BOTPD321',name:'',phone:'6598541555',region:'SG',brand:'MBS',level:11,tier:'',deposit:589331,nett:-18639,loseRate:-3.16,joined:'2024-11-29',lastDep:'2026-04-13',status:'active'},
-  {id:'BOTIB075',name:'Jeffrey Yeo',phone:'6592999983',region:'SG',brand:'MBS',level:11,tier:'VIP',deposit:446654,nett:42034,loseRate:9.41,joined:'2024-08-22',lastDep:'2026-04-14',status:'active'},
-  {id:'BOTDY462',name:'Ng Layee Rachael',phone:'6598634160',region:'SG',brand:'MBS',level:11,tier:'VIP',deposit:192859,nett:31909,loseRate:16.55,joined:'2024-08-22',lastDep:'2026-04-14',status:'active'},
-  {id:'BOTKA680',name:'Muhammad Nur Hafiz Bin Azman',phone:'6587842150',region:'SG',brand:'MBS',level:10,tier:'VIP',deposit:186084,nett:11864,loseRate:6.38,joined:'2024-09-07',lastDep:'2026-04-14',status:'active'},
-  {id:'BOTBI152',name:'Muhammad Redzwan Bin Atan',phone:'6583285148',region:'SG',brand:'MBS',level:10,tier:'VIP',deposit:122329,nett:36739,loseRate:30.03,joined:'2024-08-28',lastDep:'2026-04-14',status:'active'},
-  {id:'BOTKK133',name:'Mohd Izzath Amir',phone:'60108078804',region:'MY',brand:'MGB',level:11,tier:'VIP',deposit:2221045,nett:526208,loseRate:23.69,joined:'2021-07-02',lastDep:'2026-03-20',status:'active'},
-  {id:'BOTVA979',name:'Noor Asman Bin Mohammad Noor',phone:'60148574747',region:'MY',brand:'MGB',level:11,tier:'VIP',deposit:1511933,nett:82754,loseRate:5.47,joined:'2021-04-19',lastDep:'2026-04-09',status:'active'},
-  {id:'BOTQR035',name:'',phone:'60126837303',region:'MY',brand:'MGB',level:11,tier:'',deposit:1061750,nett:88410,loseRate:8.33,joined:'2021-10-11',lastDep:'2026-04-13',status:'active'},
-  {id:'BOTOX935',name:'',phone:'60163436681',region:'MY',brand:'MGB',level:11,tier:'',deposit:940560,nett:139215,loseRate:14.80,joined:'2023-02-08',lastDep:'2024-10-19',status:'inactive'},
-  {id:'BOTSW631',name:'',phone:'60102031239',region:'MY',brand:'MGB',level:11,tier:'',deposit:802091,nett:15218,loseRate:1.90,joined:'2021-08-29',lastDep:'2025-09-11',status:'dormant'},
-  {id:'BOTHX421',name:'',phone:'60147583576',region:'MY',brand:'MGB',level:11,tier:'',deposit:763394,nett:176140,loseRate:23.07,joined:'2021-05-11',lastDep:'2026-04-13',status:'active'},
-  {id:'BOTGC938',name:'Muhammad Redzwan Bin Atan',phone:'6583285148',region:'SG',brand:'GFW',level:11,tier:'VIP',deposit:197656,nett:16668,loseRate:8.43,joined:'2023-10-03',lastDep:'2026-04-10',status:'active'},
-  {id:'BOTDE180',name:'Jeffrey Yeo',phone:'6592999983',region:'SG',brand:'GFW',level:10,tier:'VIP',deposit:126680,nett:9226,loseRate:7.28,joined:'2023-10-22',lastDep:'2026-04-11',status:'active'},
-  {id:'BOTNS217',name:'Ruban Kumar',phone:'6598578067',region:'SG',brand:'MBS',level:10,tier:'',deposit:133025,nett:39798,loseRate:29.92,joined:'2024-11-05',lastDep:'2026-04-13',status:'active'},
+  {id:'BOTRT887',name:'Rebecca Oh Geok Peng',phone:'6587798389',region:'SG',brand:'MGB',level:11,tier:'VIP',deposit:1967511,nett:266388,loseRate:13.54,joined:'2021-07-24',lastDep:'2026-03-04',status:'active',dep90m1:3345.40,dep90m2:14116.18,dep90m3:3001.00,avgDep90:6820.86,loss90m1:1583.57,loss90m2:-6740.58,loss90m3:3001.00,avgLoss90:-718.67,peakLoss90:-2156.01},
+  {id:'BOTAW832',name:'Jeffrey Yeo',phone:'6592999983',region:'SG',brand:'MGB',level:11,tier:'VIP',deposit:1860558,nett:214920,loseRate:11.55,joined:'2021-10-01',lastDep:'2026-04-11',status:'active',dep90m1:11085.00,dep90m2:32480.00,dep90m3:12320.00,avgDep90:18628.33,loss90m1:5492.61,loss90m2:7138.86,loss90m3:4435.41,avgLoss90:5688.96,peakLoss90:17066.88},
+  {id:'BOTFF773',name:'',phone:'6582018609',region:'SG',brand:'MGB',level:11,tier:'',deposit:1447162,nett:143468,loseRate:9.91,joined:'2023-07-17',lastDep:'2026-04-14',status:'active',dep90m1:20566.95,dep90m2:31791.88,dep90m3:29696.02,avgDep90:27351.62,loss90m1:4164.20,loss90m2:4343.22,loss90m3:10339.82,avgLoss90:6282.41,peakLoss90:18847.24},
+  {id:'BOTGF798',name:'Ilkhamdani Bin Jumaat',phone:'6591673207',region:'SG',brand:'MGB',level:11,tier:'',deposit:1155914,nett:-7748,loseRate:-0.67,joined:'2022-08-29',lastDep:'2026-04-14',status:'active',dep90m1:28370.08,dep90m2:28748.37,dep90m3:24093.72,avgDep90:27070.72,loss90m1:-4010.02,loss90m2:6125.03,loss90m3:5783.46,avgLoss90:2632.82,peakLoss90:7898.47},
+  {id:'BOTPK762',name:'',phone:'6580230705',region:'SG',brand:'MGB',level:11,tier:'',deposit:978214,nett:47703,loseRate:4.88,joined:'2022-09-07',lastDep:'2026-04-14',status:'active',dep90m1:8340.00,dep90m2:1799.00,dep90m3:6276.00,avgDep90:5471.67,loss90m1:1388.22,loss90m2:688.50,loss90m3:2160.90,avgLoss90:1412.54,peakLoss90:4237.62},
+  {id:'BOTVK584',name:'',phone:'6597353954',region:'SG',brand:'MGB',level:11,tier:'',deposit:857534,nett:-72461,loseRate:-8.45,joined:'2022-08-20',lastDep:'2026-02-15',status:'active',dep90m1:0,dep90m2:105.00,dep90m3:0,avgDep90:35.00,loss90m1:0,loss90m2:105.00,loss90m3:0,avgLoss90:35.00,peakLoss90:105.00},
+  {id:'BOTSE837',name:'',phone:'6590623316',region:'SG',brand:'MGB',level:11,tier:'',deposit:812622,nett:133435,loseRate:16.42,joined:'2022-02-02',lastDep:'2026-04-13',status:'active',dep90m1:80.00,dep90m2:540.00,dep90m3:2789.00,avgDep90:1136.33,loss90m1:80.00,loss90m2:40.00,loss90m3:880.01,avgLoss90:333.34,peakLoss90:1000.01},
+  {id:'BOTIR512',name:'',phone:'6587853513',region:'SG',brand:'MGB',level:11,tier:'',deposit:762385,nett:191493,loseRate:25.12,joined:'2021-11-29',lastDep:'2026-03-14',status:'active',dep90m1:16513.39,dep90m2:663.91,dep90m3:410.00,avgDep90:5862.43,loss90m1:3404.00,loss90m2:207.90,loss90m3:-3872.76,avgLoss90:-86.95,peakLoss90:-260.86},
+  {id:'BOTEC393',name:'Muhammad Redzwan Bin Atan',phone:'6583285148',region:'SG',brand:'MGB',level:11,tier:'VIP',deposit:682468,nett:58818,loseRate:8.62,joined:'2022-01-04',lastDep:'2026-04-10',status:'active',dep90m1:23113.00,dep90m2:13499.50,dep90m3:7812.00,avgDep90:14808.17,loss90m1:-7334.84,loss90m2:3495.12,loss90m3:-3056.33,avgLoss90:-2298.68,peakLoss90:-6896.05},
+  {id:'BOTIA691',name:'',phone:'6583332501',region:'SG',brand:'MGB',level:11,tier:'',deposit:671200,nett:29899,loseRate:4.45,joined:'2023-07-17',lastDep:'2024-10-17',status:'inactive',dep90m1:0,dep90m2:0,dep90m3:0,avgDep90:0,loss90m1:0,loss90m2:0,loss90m3:0,avgLoss90:0,peakLoss90:0},
+  {id:'BOTPR323',name:'Ruban Kumar',phone:'6598578067',region:'SG',brand:'MGB',level:11,tier:'VIP',deposit:248319,nett:93519,loseRate:37.66,joined:'2022-07-27',lastDep:'2026-04-14',status:'active',dep90m1:8205.00,dep90m2:10670.00,dep90m3:5776.00,avgDep90:8217.00,loss90m1:1507.33,loss90m2:1313.98,loss90m3:2995.88,avgLoss90:1939.06,peakLoss90:5817.19},
+  {id:'BOTXF843',name:'',phone:'6583332501',region:'SG',brand:'GFW',level:11,tier:'',deposit:1104708,nett:-242089,loseRate:-21.91,joined:'2024-01-25',lastDep:'2025-07-16',status:'dormant',dep90m1:0,dep90m2:0,dep90m3:0,avgDep90:0,loss90m1:0,loss90m2:0,loss90m3:0,avgLoss90:0,peakLoss90:0},
+  {id:'BOTDX736',name:'Kelly Lim',phone:'6582330964',region:'SG',brand:'GFW',level:11,tier:'VIP',deposit:523820,nett:121494,loseRate:23.19,joined:'2023-10-22',lastDep:'2026-04-14',status:'active',dep90m1:31951.44,dep90m2:9300.32,dep90m3:16082.44,avgDep90:19111.40,loss90m1:-6700.88,loss90m2:7845.83,loss90m3:4049.52,avgLoss90:1731.49,peakLoss90:5194.47},
+  {id:'BOTAH437',name:'',phone:'6587853513',region:'SG',brand:'GFW',level:11,tier:'',deposit:298879,nett:51575,loseRate:17.26,joined:'2023-10-12',lastDep:'2026-04-14',status:'active',dep90m1:123750.99,dep90m2:5503.15,dep90m3:16785.90,avgDep90:48680.01,loss90m1:-5607.90,loss90m2:3452.82,loss90m3:3871.34,avgLoss90:572.09,peakLoss90:1716.26},
+  {id:'BOTID590',name:'',phone:'6598861371',region:'SG',brand:'GFW',level:11,tier:'',deposit:282628,nett:148282,loseRate:52.47,joined:'2024-01-05',lastDep:'2026-04-13',status:'active',dep90m1:7386.55,dep90m2:9800.20,dep90m3:4472.80,avgDep90:7219.85,loss90m1:-851.45,loss90m2:1425.44,loss90m3:2082.82,avgLoss90:885.60,peakLoss90:2656.81},
+  {id:'BOTPD321',name:'',phone:'6598541555',region:'SG',brand:'MBS',level:11,tier:'',deposit:589331,nett:-18639,loseRate:-3.16,joined:'2024-11-29',lastDep:'2026-04-13',status:'active',dep90m1:300.00,dep90m2:1600.00,dep90m3:22460.00,avgDep90:8120.00,loss90m1:-451.67,loss90m2:-547.46,loss90m3:6647.44,avgLoss90:1882.77,peakLoss90:5648.31},
+  {id:'BOTIB075',name:'Jeffrey Yeo',phone:'6592999983',region:'SG',brand:'MBS',level:11,tier:'VIP',deposit:446654,nett:42034,loseRate:9.41,joined:'2024-08-22',lastDep:'2026-04-14',status:'active',dep90m1:9119.00,dep90m2:17301.15,dep90m3:11520.00,avgDep90:12646.72,loss90m1:-2889.25,loss90m2:2167.91,loss90m3:6958.79,avgLoss90:2079.15,peakLoss90:6237.45},
+  {id:'BOTDY462',name:'Ng Layee Rachael',phone:'6598634160',region:'SG',brand:'MBS',level:11,tier:'VIP',deposit:192859,nett:31909,loseRate:16.55,joined:'2024-08-22',lastDep:'2026-04-14',status:'active',dep90m1:4571.00,dep90m2:7200.00,dep90m3:32677.00,avgDep90:14816.00,loss90m1:2310.43,loss90m2:1098.87,loss90m3:4635.69,avgLoss90:2681.66,peakLoss90:8044.99},
+  {id:'BOTKA680',name:'Muhammad Nur Hafiz Bin Azman',phone:'6587842150',region:'SG',brand:'MBS',level:10,tier:'VIP',deposit:186084,nett:11864,loseRate:6.38,joined:'2024-09-07',lastDep:'2026-04-14',status:'active',dep90m1:21625.00,dep90m2:28173.00,dep90m3:6080.00,avgDep90:18626.00,loss90m1:-8291.53,loss90m2:4591.11,loss90m3:3820.82,avgLoss90:40.13,peakLoss90:120.40},
+  {id:'BOTBI152',name:'Muhammad Redzwan Bin Atan',phone:'6583285148',region:'SG',brand:'MBS',level:10,tier:'VIP',deposit:122329,nett:36739,loseRate:30.03,joined:'2024-08-28',lastDep:'2026-04-14',status:'active',dep90m1:14917.00,dep90m2:7856.15,dep90m3:6427.30,avgDep90:9733.48,loss90m1:7230.21,loss90m2:1980.52,loss90m3:3873.83,avgLoss90:4361.52,peakLoss90:13084.56},
+  {id:'BOTKK133',name:'Mohd Izzath Amir',phone:'60108078804',region:'MY',brand:'MGB',level:11,tier:'VIP',deposit:2221045,nett:526208,loseRate:23.69,joined:'2021-07-02',lastDep:'2026-03-20',status:'active',dep90m1:3000.00,dep90m2:20800.00,dep90m3:500.00,avgDep90:8100.00,loss90m1:-2900.50,loss90m2:6800.00,loss90m3:500.00,avgLoss90:1466.50,peakLoss90:4399.50},
+  {id:'BOTVA979',name:'Noor Asman Bin Mohammad Noor',phone:'60148574747',region:'MY',brand:'MGB',level:11,tier:'VIP',deposit:1511933,nett:82754,loseRate:5.47,joined:'2021-04-19',lastDep:'2026-04-09',status:'active',dep90m1:9293.00,dep90m2:7830.00,dep90m3:14527.00,avgDep90:10550.00,loss90m1:1702.30,loss90m2:536.26,loss90m3:4219.80,avgLoss90:2152.79,peakLoss90:6458.36},
+  {id:'BOTQR035',name:'',phone:'60126837303',region:'MY',brand:'MGB',level:11,tier:'',deposit:1061750,nett:88410,loseRate:8.33,joined:'2021-10-11',lastDep:'2026-04-13',status:'active',dep90m1:32550.00,dep90m2:23000.00,dep90m3:20100.00,avgDep90:25216.67,loss90m1:-1596.96,loss90m2:5112.97,loss90m3:6127.51,avgLoss90:3214.51,peakLoss90:9643.52},
+  {id:'BOTOX935',name:'',phone:'60163436681',region:'MY',brand:'MGB',level:11,tier:'',deposit:940560,nett:139215,loseRate:14.80,joined:'2023-02-08',lastDep:'2024-10-19',status:'inactive',dep90m1:0,dep90m2:0,dep90m3:0,avgDep90:0,loss90m1:0,loss90m2:0,loss90m3:0,avgLoss90:0,peakLoss90:0},
+  {id:'BOTSW631',name:'',phone:'60102031239',region:'MY',brand:'MGB',level:11,tier:'',deposit:802091,nett:15218,loseRate:1.90,joined:'2021-08-29',lastDep:'2025-09-11',status:'dormant',dep90m1:0,dep90m2:0,dep90m3:0,avgDep90:0,loss90m1:0,loss90m2:0,loss90m3:0,avgLoss90:0,peakLoss90:0},
+  {id:'BOTHX421',name:'',phone:'60147583576',region:'MY',brand:'MGB',level:11,tier:'',deposit:763394,nett:176140,loseRate:23.07,joined:'2021-05-11',lastDep:'2026-04-13',status:'active',dep90m1:9250.00,dep90m2:120.00,dep90m3:14955.00,avgDep90:8108.33,loss90m1:8750.00,loss90m2:-1610.61,loss90m3:6713.85,avgLoss90:4617.75,peakLoss90:13853.24},
+  {id:'BOTGC938',name:'Muhammad Redzwan Bin Atan',phone:'6583285148',region:'SG',brand:'GFW',level:11,tier:'VIP',deposit:197656,nett:16668,loseRate:8.43,joined:'2023-10-03',lastDep:'2026-04-10',status:'active',dep90m1:12724.38,dep90m2:9332.80,dep90m3:8683.96,avgDep90:10247.05,loss90m1:2921.15,loss90m2:-1019.94,loss90m3:1437.09,avgLoss90:1112.77,peakLoss90:3338.30},
+  {id:'BOTDE180',name:'Jeffrey Yeo',phone:'6592999983',region:'SG',brand:'GFW',level:10,tier:'VIP',deposit:126680,nett:9226,loseRate:7.28,joined:'2023-10-22',lastDep:'2026-04-11',status:'active',dep90m1:17660.00,dep90m2:20390.00,dep90m3:5040.00,avgDep90:14363.33,loss90m1:-663.47,loss90m2:5308.06,loss90m3:1049.75,avgLoss90:1898.11,peakLoss90:5694.34},
+  {id:'BOTNS217',name:'Ruban Kumar',phone:'6598578067',region:'SG',brand:'MBS',level:10,tier:'',deposit:133025,nett:39798,loseRate:29.92,joined:'2024-11-05',lastDep:'2026-04-13',status:'active',dep90m1:7689.00,dep90m2:9960.00,dep90m3:5805.00,avgDep90:7818.00,loss90m1:254.36,loss90m2:7039.73,loss90m3:-804.91,avgLoss90:2163.06,peakLoss90:6489.18},
+  {id:'BOTAW832',name:'Jeffrey Yeo',phone:'6592999983',region:'SG',brand:'MGB',level:11,tier:'VIP',deposit:1860558,nett:214920,loseRate:11.55,joined:'2021-10-01',lastDep:'2026-04-11',status:'active',dep90m1:11085.00,dep90m2:32480.00,dep90m3:12320.00,avgDep90:18628.33,loss90m1:6493.03,loss90m2:19339.16,loss90m3:9136.32,avgLoss90:11656.17,peakLoss90:34968.51},
+  {id:'BOTFF773',name:'',phone:'6582018609',region:'SG',brand:'MGB',level:11,tier:'',deposit:1447162,nett:143468,loseRate:9.91,joined:'2023-07-17',lastDep:'2026-04-14',status:'active',dep90m1:20566.95,dep90m2:31791.88,dep90m3:29696.02,avgDep90:27351.62,loss90m1:5394.20,loss90m2:8283.22,loss90m3:10339.82,avgLoss90:8005.75,peakLoss90:24017.24},
+  {id:'BOTGF798',name:'Ilkhamdani Bin Jumaat',phone:'6591673207',region:'SG',brand:'MGB',level:11,tier:'',deposit:1155914,nett:-7748,loseRate:-0.67,joined:'2022-08-29',lastDep:'2026-04-14',status:'active',dep90m1:28370.08,dep90m2:28748.37,dep90m3:24093.72,avgDep90:27070.72,loss90m1:1572.98,loss90m2:6125.03,loss90m3:5783.46,avgLoss90:4493.82,peakLoss90:13481.47},
+  {id:'BOTPK762',name:'',phone:'6580230705',region:'SG',brand:'MGB',level:11,tier:'',deposit:978214,nett:47703,loseRate:4.88,joined:'2022-09-07',lastDep:'2026-04-14',status:'active',dep90m1:8340.00,dep90m2:1799.00,dep90m3:6276.00,avgDep90:5471.67,loss90m1:3388.22,loss90m2:688.50,loss90m3:4161.76,avgLoss90:2746.16,peakLoss90:8238.48},
+  {id:'BOTVK584',name:'',phone:'6597353954',region:'SG',brand:'MGB',level:11,tier:'',deposit:857534,nett:-72461,loseRate:-8.45,joined:'2022-08-20',lastDep:'2026-02-15',status:'active',dep90m1:0,dep90m2:105.00,dep90m3:0,avgDep90:35.00,loss90m1:0,loss90m2:105.00,loss90m3:0,avgLoss90:35.00,peakLoss90:105.00},
+  {id:'BOTSE837',name:'',phone:'6590623316',region:'SG',brand:'MGB',level:11,tier:'',deposit:812622,nett:133435,loseRate:16.42,joined:'2022-02-02',lastDep:'2026-04-13',status:'active',dep90m1:80.00,dep90m2:540.00,dep90m3:2789.00,avgDep90:1136.33,loss90m1:80.00,loss90m2:40.00,loss90m3:880.01,avgLoss90:333.34,peakLoss90:1000.01},
+  {id:'BOTIR512',name:'',phone:'6587853513',region:'SG',brand:'MGB',level:11,tier:'',deposit:762385,nett:191493,loseRate:25.12,joined:'2021-11-29',lastDep:'2026-03-14',status:'active',dep90m1:16513.39,dep90m2:663.91,dep90m3:410.00,avgDep90:5862.43,loss90m1:15203.08,loss90m2:207.90,loss90m3:110.11,avgLoss90:5173.70,peakLoss90:15521.09},
+  {id:'BOTEC393',name:'Muhammad Redzwan Bin Atan',phone:'6583285148',region:'SG',brand:'MGB',level:11,tier:'VIP',deposit:682468,nett:58818,loseRate:8.62,joined:'2022-01-04',lastDep:'2026-04-10',status:'active',dep90m1:23113.00,dep90m2:13499.50,dep90m3:7812.00,avgDep90:14808.17,loss90m1:10866.37,loss90m2:6295.63,loss90m3:2244.00,avgLoss90:6468.67,peakLoss90:19406.00},
+  {id:'BOTIA691',name:'',phone:'6583332501',region:'SG',brand:'MGB',level:11,tier:'',deposit:671200,nett:29899,loseRate:4.45,joined:'2023-07-17',lastDep:'2024-10-17',status:'inactive',dep90m1:0,dep90m2:0,dep90m3:0,avgDep90:0,loss90m1:0,loss90m2:0,loss90m3:0,avgLoss90:0,peakLoss90:0},
+  {id:'BOTPR323',name:'Ruban Kumar',phone:'6598578067',region:'SG',brand:'MGB',level:11,tier:'VIP',deposit:248319,nett:93519,loseRate:37.66,joined:'2022-07-27',lastDep:'2026-04-14',status:'active',dep90m1:8205.00,dep90m2:10670.00,dep90m3:5776.00,avgDep90:8217.00,loss90m1:5207.33,loss90m2:6713.98,loss90m3:4995.88,avgLoss90:5639.06,peakLoss90:16917.19},
+  {id:'BOTXF843',name:'',phone:'6583332501',region:'SG',brand:'GFW',level:11,tier:'',deposit:1104708,nett:-242089,loseRate:-21.91,joined:'2024-01-25',lastDep:'2025-07-16',status:'dormant',dep90m1:0,dep90m2:0,dep90m3:0,avgDep90:0,loss90m1:0,loss90m2:0,loss90m3:0,avgLoss90:0,peakLoss90:0},
+  {id:'BOTDX736',name:'Kelly Lim',phone:'6582330964',region:'SG',brand:'GFW',level:11,tier:'VIP',deposit:523820,nett:121494,loseRate:23.19,joined:'2023-10-22',lastDep:'2026-04-14',status:'active',dep90m1:9951.44,dep90m2:9300.32,dep90m3:16082.44,avgDep90:11778.07,loss90m1:6396.12,loss90m2:7845.83,loss90m3:10837.52,avgLoss90:8359.82,peakLoss90:25079.47},
+  {id:'BOTAH437',name:'',phone:'6587853513',region:'SG',brand:'GFW',level:11,tier:'',deposit:298879,nett:51575,loseRate:17.26,joined:'2023-10-12',lastDep:'2026-04-14',status:'active',dep90m1:49250.99,dep90m2:5503.15,dep90m3:12785.90,avgDep90:22513.35,loss90m1:48555.93,loss90m2:3452.82,loss90m3:10980.14,avgLoss90:20996.30,peakLoss90:62988.89},
+  {id:'BOTID590',name:'',phone:'6598861371',region:'SG',brand:'GFW',level:11,tier:'',deposit:282628,nett:148282,loseRate:52.47,joined:'2024-01-05',lastDep:'2026-04-13',status:'active',dep90m1:7386.55,dep90m2:9800.20,dep90m3:4472.80,avgDep90:7219.85,loss90m1:6948.55,loss90m2:8272.20,loss90m3:3082.82,avgLoss90:6101.19,peakLoss90:18303.57},
+  {id:'BOTPD321',name:'',phone:'6598541555',region:'SG',brand:'MBS',level:11,tier:'',deposit:589331,nett:-18639,loseRate:-3.16,joined:'2024-11-29',lastDep:'2026-04-13',status:'active',dep90m1:300.00,dep90m2:1600.00,dep90m3:18460.00,avgDep90:6786.67,loss90m1:-451.67,loss90m2:673.68,loss90m3:17161.20,avgLoss90:5794.40,peakLoss90:17383.21},
+  {id:'BOTIB075',name:'Jeffrey Yeo',phone:'6592999983',region:'SG',brand:'MBS',level:11,tier:'VIP',deposit:446654,nett:42034,loseRate:9.41,joined:'2024-08-22',lastDep:'2026-04-14',status:'active',dep90m1:9119.00,dep90m2:17301.15,dep90m3:11520.00,avgDep90:12646.72,loss90m1:2713.18,loss90m2:5068.06,loss90m3:6958.79,avgLoss90:4913.34,peakLoss90:14740.03},
+  {id:'BOTDY462',name:'Ng Layee Rachael',phone:'6598634160',region:'SG',brand:'MBS',level:11,tier:'VIP',deposit:192859,nett:31909,loseRate:16.55,joined:'2024-08-22',lastDep:'2026-04-14',status:'active',dep90m1:4571.00,dep90m2:7200.00,dep90m3:32677.00,avgDep90:14816.00,loss90m1:2310.43,loss90m2:4800.00,loss90m3:22035.72,avgLoss90:9715.38,peakLoss90:29146.15},
+  {id:'BOTKA680',name:'Muhammad Nur Hafiz Bin Azman',phone:'6587842150',region:'SG',brand:'MBS',level:10,tier:'VIP',deposit:186084,nett:11864,loseRate:6.38,joined:'2024-09-07',lastDep:'2026-04-14',status:'active',dep90m1:21625.00,dep90m2:28173.00,dep90m3:6080.00,avgDep90:18626.00,loss90m1:13849.78,loss90m2:19534.60,loss90m3:3820.82,avgLoss90:12401.73,peakLoss90:37205.20},
+  {id:'BOTBI152',name:'Muhammad Redzwan Bin Atan',phone:'6583285148',region:'SG',brand:'MBS',level:10,tier:'VIP',deposit:122329,nett:36739,loseRate:30.03,joined:'2024-08-28',lastDep:'2026-04-14',status:'active',dep90m1:14917.00,dep90m2:7856.15,dep90m3:6427.30,avgDep90:9733.48,loss90m1:9230.63,loss90m2:3380.87,loss90m3:3873.83,avgLoss90:5495.11,peakLoss90:16485.33},
+  {id:'BOTKK133',name:'Mohd Izzath Amir',phone:'60108078804',region:'MY',brand:'MGB',level:11,tier:'VIP',deposit:2221045,nett:526208,loseRate:23.69,joined:'2021-07-02',lastDep:'2026-03-20',status:'active',dep90m1:0,dep90m2:800.00,dep90m3:500.00,avgDep90:433.33,loss90m1:-1900.50,loss90m2:800.00,loss90m3:500.00,avgLoss90:-200.17,peakLoss90:-600.50},
+  {id:'BOTVA979',name:'Noor Asman Bin Mohammad Noor',phone:'60148574747',region:'MY',brand:'MGB',level:11,tier:'VIP',deposit:1511933,nett:82754,loseRate:5.47,joined:'2021-04-19',lastDep:'2026-04-09',status:'active',dep90m1:9293.00,dep90m2:4830.00,dep90m3:9527.00,avgDep90:7883.33,loss90m1:7016.30,loss90m2:3738.63,loss90m3:2221.80,avgLoss90:4325.58,peakLoss90:12976.73},
+  {id:'BOTQR035',name:'',phone:'60126837303',region:'MY',brand:'MGB',level:11,tier:'',deposit:1061750,nett:88410,loseRate:8.33,joined:'2021-10-11',lastDep:'2026-04-13',status:'active',dep90m1:32550.00,dep90m2:23000.00,dep90m3:20100.00,avgDep90:25216.67,loss90m1:4373.04,loss90m2:6312.97,loss90m3:6127.51,avgLoss90:5604.51,peakLoss90:16813.52},
+  {id:'BOTOX935',name:'',phone:'60163436681',region:'MY',brand:'MGB',level:11,tier:'',deposit:940560,nett:139215,loseRate:14.80,joined:'2023-02-08',lastDep:'2024-10-19',status:'inactive',dep90m1:0,dep90m2:0,dep90m3:0,avgDep90:0,loss90m1:0,loss90m2:0,loss90m3:0,avgLoss90:0,peakLoss90:0},
+  {id:'BOTSW631',name:'',phone:'60102031239',region:'MY',brand:'MGB',level:11,tier:'',deposit:802091,nett:15218,loseRate:1.90,joined:'2021-08-29',lastDep:'2025-09-11',status:'dormant',dep90m1:0,dep90m2:0,dep90m3:0,avgDep90:0,loss90m1:0,loss90m2:0,loss90m3:0,avgLoss90:0,peakLoss90:0},
+  {id:'BOTHX421',name:'',phone:'60147583576',region:'MY',brand:'MGB',level:11,tier:'',deposit:763394,nett:176140,loseRate:23.07,joined:'2021-05-11',lastDep:'2026-04-13',status:'active',dep90m1:9250.00,dep90m2:120.00,dep90m3:14955.00,avgDep90:8108.33,loss90m1:8750.00,loss90m2:-1610.61,loss90m3:13416.40,avgLoss90:6851.93,peakLoss90:20555.79},
+  {id:'BOTGC938',name:'Muhammad Redzwan Bin Atan',phone:'6583285148',region:'SG',brand:'GFW',level:11,tier:'VIP',deposit:197656,nett:16668,loseRate:8.43,joined:'2023-10-03',lastDep:'2026-04-10',status:'active',dep90m1:12724.38,dep90m2:9332.80,dep90m3:8683.96,avgDep90:10247.05,loss90m1:5121.49,loss90m2:6681.06,loss90m3:3937.96,avgLoss90:5246.84,peakLoss90:15740.51},
+  {id:'BOTDE180',name:'Jeffrey Yeo',phone:'6592999983',region:'SG',brand:'GFW',level:10,tier:'VIP',deposit:126680,nett:9226,loseRate:7.28,joined:'2023-10-22',lastDep:'2026-04-11',status:'active',dep90m1:17660.00,dep90m2:20390.00,dep90m3:5040.00,avgDep90:14363.33,loss90m1:9501.89,loss90m2:9308.06,loss90m3:1049.75,avgLoss90:6619.90,peakLoss90:19859.70},
+  {id:'BOTNS217',name:'Ruban Kumar',phone:'6598578067',region:'SG',brand:'MBS',level:10,tier:'',deposit:133025,nett:39798,loseRate:29.92,joined:'2024-11-05',lastDep:'2026-04-13',status:'active',dep90m1:7689.00,dep90m2:9960.00,dep90m3:5805.00,avgDep90:7818.00,loss90m1:5644.36,loss90m2:8059.73,loss90m3:3195.09,avgLoss90:5633.06,peakLoss90:16899.18},
 ];
 
 // ─────────────────────────────────────────────
@@ -466,6 +510,8 @@ async function syncFromSheet() {
         if (daysSince > 180) status = 'dormant';
         else if (daysSince > 60) status = 'inactive';
       }
+      // Find existing member to preserve 90d data
+      const existing = MEMBERS.find(x => x.id === String(r[2]).trim()) || {};
       return {
         id: String(r[2]).trim(),
         name: String(r[3]||'').trim(),
@@ -481,19 +527,19 @@ async function syncFromSheet() {
         joined: parseDate(r[11]),
         lastDep: lastDep,
         status: status,
-        // 90d data
-        depMonth: parseNum(r[14]),
-        lossNow: parseNum(r[15]),
-        dep90m1: parseNum(r[17]),
-        dep90m2: parseNum(r[18]),
-        dep90m3: parseNum(r[19]),
-        avgDep90: parseNum(r[20]),
-        loss90m1: parseNum(r[22]),
-        loss90m2: parseNum(r[23]),
-        loss90m3: parseNum(r[24]),
-        avgLoss90: parseNum(r[25]),
-        peakLoss90: parseNum(r[26]),
-        mostPlayed: String(r[27]||'').trim(),
+        mostPlayed: String(r[27]||'').trim() || existing.mostPlayed || '',
+        // Preserve existing 90d data — only sync updates basic member info
+        depMonth: existing.depMonth || 0,
+        lossNow: existing.lossNow || 0,
+        dep90m1: existing.dep90m1 || 0,
+        dep90m2: existing.dep90m2 || 0,
+        dep90m3: existing.dep90m3 || 0,
+        avgDep90: existing.avgDep90 || 0,
+        loss90m1: existing.loss90m1 || 0,
+        loss90m2: existing.loss90m2 || 0,
+        loss90m3: existing.loss90m3 || 0,
+        avgLoss90: existing.avgLoss90 || 0,
+        peakLoss90: existing.peakLoss90 || 0,
       };
     }).filter(m => m.id);
 
@@ -638,22 +684,23 @@ function build90dHtml(m, curr) {
   function sc(n) {
     if (!n) return '<span style="color:var(--ink4)">—</span>';
     const neg = n < 0;
-    return '<span class="' + (neg?'mv-red':'mv-green') + '">' + (neg?'-':'') + curr + ' ' + fmtNum(Math.abs(n)) + '</span>';
+    // Positive = customer lost (red), Negative = customer won (green)
+    return '<span class="' + (neg?'mv-green':'mv-red') + '">' + (neg?'+':'-') + curr + ' ' + fmtNum(Math.abs(n)) + '</span>';
   }
   function sp(n) { return n ? curr + ' ' + fmtNum(n) : '<span style="color:var(--ink4)">—</span>'; }
   const cells = [
     ['Deposit this month', sp(m.depMonth)],
     ['Loss this month', sc(m.lossNow)],
     ['Most played', esc(m.mostPlayed) || '—'],
-    ['Dep Month 1', sp(m.dep90m1)],
-    ['Dep Month 2', sp(m.dep90m2)],
-    ['Dep Month 3', sp(m.dep90m3)],
-    ['Loss Month 1', sc(m.loss90m1)],
-    ['Loss Month 2', sc(m.loss90m2)],
-    ['Loss Month 3', sc(m.loss90m3)],
+    ['Dep 3 months ago', sp(m.dep90m1)],
+    ['Dep 2 months ago', sp(m.dep90m2)],
+    ['Dep last month', sp(m.dep90m3)],
+    ['Loss 3 months ago', sc(m.loss90m1)],
+    ['Loss 2 months ago', sc(m.loss90m2)],
+    ['Loss last month', sc(m.loss90m3)],
     ['Avg deposit (90d)', sp(m.avgDep90)],
     ['Avg loss (90d)', sc(m.avgLoss90)],
-    ['Peak loss (90d)', sc(m.peakLoss90)],
+    ['Total loss (90d)', sc(m.peakLoss90)],
   ];
   return '<div class="stats-90d">'
     + '<div class="stats-90d-head" onclick="toggle90d(this)"><span>📊 Last 90 Days</span><span id="toggle90d-arrow">▲</span></div>'
@@ -714,7 +761,7 @@ function renderProfile(id) {
   const d = getMember(id);
   const tier = getTier(m);
   const curr = m.region === 'SG' ? 'SGD' : 'MYR';
-  const link = location.href.split('#')[0] + '#' + id;
+  const link = 'https://testmod0.github.io/vip/#' + id;
   const formula = '=HYPERLINK("' + link + '","\\uD83D\\uDCCB ' + (m.name||m.id) + '")';
 
   const PREFS = ['Free credit','iPhone / Tech','Gold chain','Cash / Ang bao','Flight ticket','Omakase','Rolex / Watch','Hotel stay','Gold bracelet'];
@@ -873,10 +920,115 @@ async function saveGift(id, realIdx, entryId) {
   await saveStore(id); toast('Gift updated ✓'); renderProfile(id);
 }
 
+// ─────────────────────────────────────────────
+// EXCEL 90D PROCESSING (SheetJS)
+// ─────────────────────────────────────────────
+function loadSheetJS() {
+  return new Promise((resolve) => {
+    if (window.XLSX) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload = resolve;
+    document.head.appendChild(s);
+  });
+}
+
+async function processExcelFiles() {
+  const depFile = document.getElementById('dep-file').files[0];
+  const wdFile = document.getElementById('wd-file').files[0];
+  const statusEl = document.getElementById('excel-status');
+
+  if (!depFile || !wdFile) { statusEl.textContent = '⚠️ Please select both files'; return; }
+
+  statusEl.textContent = 'Loading SheetJS…';
+  await loadSheetJS();
+
+  statusEl.textContent = 'Reading files…';
+
+  function readXlsx(file) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const wb = XLSX.read(e.target.result, { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        resolve(XLSX.utils.sheet_to_json(ws));
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  const depData = await readXlsx(depFile);
+  const wdData = await readXlsx(wdFile);
+
+  // Parse dates and group by member + month
+  function getMonth(row) {
+    const d = new Date(row['Created Date Time'] || row['Approved Date Time'] || '');
+    if (isNaN(d)) return null;
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+  }
+
+  // Find the 3 most recent months in data
+  const allMonths = [...new Set(depData.map(getMonth).filter(Boolean))].sort();
+  const months = allMonths.slice(-3); // last 3 months
+  if (months.length < 3) { statusEl.textContent = '⚠️ Need at least 3 months of data'; return; }
+
+  statusEl.textContent = 'Calculating for months: ' + months.join(', ') + '…';
+
+  const updated = MEMBERS.map(m => {
+    const mDep = depData.filter(r => r['Member ID'] === m.id);
+    const mWd = wdData.filter(r => r['Member ID'] === m.id);
+
+    const depByMonth = months.map(mo => mDep.filter(r => getMonth(r)===mo).reduce((s,r)=>{
+      const amt = parseFloat(String(r['Amount']||0).replace(/,/g,'')) || 0;
+      return s + amt;
+    }, 0));
+    const wdByMonth = months.map(mo => mWd.filter(r => getMonth(r)===mo).reduce((s,r)=>{
+      const amt = parseFloat(String(r['Amount']||0).replace(/,/g,'')) || 0;
+      return s + amt;
+    }, 0));
+    const lossByMonth = depByMonth.map((d,i) => d - wdByMonth[i]);
+
+    const avgDep  = depByMonth.reduce((a,b)=>a+b,0) / 3;
+    const avgLoss = lossByMonth.reduce((a,b)=>a+b,0) / 3;
+    const totalLoss = lossByMonth.reduce((a,b)=>a+b,0);
+
+    return {
+      ...m,
+      dep90m1: Math.round(depByMonth[0]*100)/100,
+      dep90m2: Math.round(depByMonth[1]*100)/100,
+      dep90m3: Math.round(depByMonth[2]*100)/100,
+      avgDep90: Math.round(avgDep*100)/100,
+      loss90m1: Math.round(lossByMonth[0]*100)/100,
+      loss90m2: Math.round(lossByMonth[1]*100)/100,
+      loss90m3: Math.round(lossByMonth[2]*100)/100,
+      avgLoss90: Math.round(avgLoss*100)/100,
+      peakLoss90: Math.round(totalLoss*100)/100,
+    };
+  });
+
+  MEMBERS = updated;
+  const ts = new Date().toLocaleString('en-GB', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+  localStorage.setItem(MEMBERS_KEY, JSON.stringify(MEMBERS));
+  localStorage.setItem(MEMBERS_KEY + '_ts', ts);
+
+  // Push to Firebase so staff sees updated data
+  try {
+    await initFirebase();
+    await db.collection('config').doc('members').set({ list: MEMBERS, ts: ts });
+    statusEl.style.color = 'var(--green)';
+    statusEl.textContent = '✅ 90d data updated & saved to cloud for ' + MEMBERS.length + ' members';
+  } catch(e) {
+    statusEl.textContent = '✅ Calculated locally (Firebase save failed)';
+  }
+
+  renderIndex();
+  if (currentId) renderProfile(currentId);
+}
+
 function copyMemberLink(id) {
   const m = MEMBERS.find(x => x.id === id);
   const name = m ? (m.name || m.id) : id;
-  const link = location.href.split('#')[0] + '#' + id;
+  const link = 'https://testmod0.github.io/vip/#' + id;
   const formula = '=HYPERLINK("' + link + '","📋 ' + name + '")';
   navigator.clipboard.writeText(formula).then(()=>toast('Sheet formula copied ✓')).catch(()=>prompt('Copy formula:',formula));
 }
